@@ -47,6 +47,16 @@ import '../../features/admin/b2b_dashboard/data/repositories/admin_b2b_repositor
 import '../../features/admin/b2b_dashboard/domain/repositories/admin_b2b_repository.dart';
 import '../../features/admin/b2b_dashboard/domain/usecases/get_admin_b2b_usecase.dart';
 import '../../features/admin/b2b_dashboard/presentation/cubit/admin_b2b_cubit.dart';
+import '../../features/client_dashboard/data/datasources/b2c_remote_data_source.dart';
+import '../../features/client_dashboard/data/repositories/b2c_overview_repository_impl.dart';
+import '../../features/client_dashboard/domain/repositories/b2c_overview_repository.dart';
+import '../../features/client_dashboard/domain/usecases/get_b2c_overview_usecase.dart';
+import '../../features/client_dashboard/presentation/state/b2c_overview_cubit.dart';
+import '../../features/client_dashboard/data/datasources/me_dashboard_remote_data_source.dart';
+import '../../features/client_dashboard/data/repositories/me_dashboard_repository_impl.dart';
+import '../../features/client_dashboard/domain/repositories/me_dashboard_repository.dart';
+import '../../features/client_dashboard/domain/usecases/get_me_dashboard_usecase.dart';
+import '../../features/client_dashboard/presentation/state/me_dashboard_cubit.dart';
 
 final sl = GetIt.instance;
 final GlobalKey<NavigatorState> globalNavigatorKey =
@@ -95,6 +105,12 @@ Future<void> initDI() async {
   sl.registerLazySingleton<AdminB2BRemoteDataSource>(
     () => AdminB2BRemoteDataSourceImpl(dio: sl<DioClient>().dio),
   );
+  sl.registerLazySingleton<B2CRemoteDataSource>(
+    () => B2CRemoteDataSourceImpl(dio: sl<DioClient>().dio),
+  );
+  sl.registerLazySingleton<MeDashboardRemoteDataSource>(
+    () => MeDashboardRemoteDataSourceImpl(dio: sl<DioClient>().dio),
+  );
 
   // Repository
   sl.registerLazySingleton<AuthRepository>(
@@ -118,6 +134,12 @@ Future<void> initDI() async {
   sl.registerLazySingleton<AdminB2BRepository>(
     () => AdminB2BRepositoryImpl(sl()),
   );
+  sl.registerLazySingleton<B2COverviewRepository>(
+    () => B2COverviewRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<MeDashboardRepository>(
+    () => MeDashboardRepositoryImpl(remoteDataSource: sl()),
+  );
 
   // Use Cases
   sl.registerLazySingleton(() => LoginUseCase(sl()));
@@ -130,6 +152,8 @@ Future<void> initDI() async {
   sl.registerLazySingleton(() => GetAdminCarsUseCase(sl()));
   sl.registerLazySingleton(() => GetAdminUsersUseCase(sl()));
   sl.registerLazySingleton(() => GetAdminB2BUseCase(sl()));
+  sl.registerLazySingleton(() => GetB2COverviewUseCase(sl()));
+  sl.registerLazySingleton(() => GetMeDashboardUseCase(sl()));
 
   // Cubits
   sl.registerFactory(() => LoginCubit(sl()));
@@ -141,4 +165,6 @@ Future<void> initDI() async {
   sl.registerFactory(() => AdminCarsCubit(sl()));
   sl.registerFactory(() => AdminUsersCubit(sl()));
   sl.registerFactory(() => AdminB2BCubit(getAdminB2BUseCase: sl()));
+  sl.registerFactory(() => B2COverviewCubit(sl()));
+  sl.registerFactory(() => MeDashboardCubit(sl()));
 }

@@ -12,6 +12,9 @@ import 'client_profile_page.dart';
 import 'client_support_page.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/dependency_injection.dart';
+import '../state/b2c_overview_cubit.dart';
+import '../../../admin/cars/presentation/cubit/admin_cars_cubit.dart';
+import '../state/me_dashboard_cubit.dart';
 
 class ClientMainLayout extends StatefulWidget {
   const ClientMainLayout({super.key});
@@ -281,15 +284,24 @@ class _ClientMainLayoutState extends State<ClientMainLayout> {
   Widget _getPage(int index) {
     switch (index) {
       case 0:
-        return const ClientDashboardOverview();
+        return BlocProvider(
+          create: (_) => sl<B2COverviewCubit>()..getOverview(),
+          child: const ClientDashboardOverview(),
+        );
       case 1:
         return const MyBookingsPage();
       case 2:
         return const ClientHotelsPage();
       case 3:
-        return const ClientCarsPage();
+        return BlocProvider(
+          create: (_) => sl<AdminCarsCubit>()..getCars(),
+          child: const ClientCarsPage(),
+        );
       case 4:
-        return const ClientProfilePage();
+        return BlocProvider(
+          create: (_) => sl<MeDashboardCubit>()..fetchDashboard(),
+          child: const ClientProfilePage(),
+        );
       case 5:
         return const ClientLoyaltyPage();
       case 6:

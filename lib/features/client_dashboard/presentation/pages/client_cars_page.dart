@@ -1,49 +1,73 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_text.dart';
 import '../../../../core/widgets/glass_container.dart';
+import '../../../admin/cars/presentation/cubit/admin_cars_cubit.dart';
+import '../../../admin/cars/presentation/cubit/admin_cars_state.dart';
+import '../../../admin/cars/domain/entities/admin_cars_entity.dart';
 
-class ClientCarsPage extends ConsumerStatefulWidget {
+class ClientCarsPage extends StatefulWidget {
   const ClientCarsPage({super.key});
 
   @override
-  ConsumerState<ClientCarsPage> createState() => _ClientCarsPageState();
+  State<ClientCarsPage> createState() => _ClientCarsPageState();
 }
 
-class _ClientCarsPageState extends ConsumerState<ClientCarsPage> {
-  String _activeFilter = 'all';
+class _ClientCarsPageState extends State<ClientCarsPage> {
+  String _activeFilter = 'الجميع';
 
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 800;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(isMobile ? 16.0 : 32.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          _buildHeader(isMobile),
-          const SizedBox(height: 32),
+    return BlocBuilder<AdminCarsCubit, AdminCarsState>(
+      builder: (context, state) {
+        if (state is AdminCarsLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is AdminCarsError) {
+          return Center(
+            child: Text(
+              state.message,
+              style: const TextStyle(color: Colors.redAccent),
+            ),
+          );
+        } else if (state is AdminCarsLoaded) {
+          final carsData = state.data;
+          return RefreshIndicator(
+            onRefresh: () => context.read<AdminCarsCubit>().refresh(),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(isMobile ? 16.0 : 32.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  _buildHeader(isMobile),
+                  const SizedBox(height: 32),
 
-          // Car Stats
-          _buildCarStats(isMobile),
-          const SizedBox(height: 32),
+                  // Car Stats
+                  _buildCarStats(carsData.kpis, isMobile),
+                  const SizedBox(height: 32),
 
-          // Filters
-          _buildFilters(isMobile),
-          const SizedBox(height: 32),
+                  // Filters
+                  _buildFilters(carsData.filters.categories),
+                  const SizedBox(height: 32),
 
-          // Cars List
-          _buildCarsList(isMobile),
-          const SizedBox(height: 48),
+                  // Cars List
+                  _buildCarsList(carsData.bookings, isMobile),
+                  const SizedBox(height: 48),
 
-          // Insurance Note
-          _buildInsuranceBanner(),
-          const SizedBox(height: 40),
-        ],
-      ),
+                  // Insurance Note
+                  _buildInsuranceBanner(),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 
@@ -85,32 +109,38 @@ class _ClientCarsPageState extends ConsumerState<ClientCarsPage> {
     );
   }
 
-  Widget _buildCarStats(bool isMobile) {
+  Widget _buildCarStats(CarKPIEntity kpis, bool isMobile) {
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: isMobile ? 2 : 3,
+      crossAxisCount: isMobile ? 2 : 4,
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
       childAspectRatio: 1.8,
       children: [
         _buildStatCard(
-          'إجمالي السيارات',
-          '1',
+          'إجمالي الحجوزات',
+          kpis.totalCarBookings.toString(),
           Icons.directions_car,
           Colors.blueAccent,
         ),
         _buildStatCard(
-          'أيام التأجير',
-          '5',
-          Icons.event_available,
+          'إجمالي القيمة',
+          '\$${kpis.carRevenue}',
+          Icons.payments,
           Colors.greenAccent,
         ),
         _buildStatCard(
-          'تكلفة النقل',
-          '650\$',
-          Icons.payments,
+          'متوسط الأيام',
+          '${kpis.avgRentalDays.toStringAsFixed(1)} يوم',
+          Icons.event_available,
           Colors.purpleAccent,
+        ),
+        _buildStatCard(
+          'الشركاء',
+          kpis.carPartners.toString(),
+          Icons.business,
+          Colors.orangeAccent,
         ),
       ],
     );
@@ -153,13 +183,16 @@ class _ClientCarsPageState extends ConsumerState<ClientCarsPage> {
     );
   }
 
-  Widget _buildFilters(bool isMobile) {
-    return Row(
-      children: [
-        _buildFilterChip('الجميع', 'all'),
-        _buildFilterChip('نشطة حالياً', 'active'),
-        _buildFilterChip('سابقة', 'completed'),
-      ],
+  Widget _buildFilters(List<String> categories) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _buildFilterChip('الجميع', 'الجميع'),
+          if (categories.isNotEmpty)
+            ...categories.map((c) => _buildFilterChip(c, c)),
+        ],
+      ),
     );
   }
 
@@ -191,18 +224,42 @@ class _ClientCarsPageState extends ConsumerState<ClientCarsPage> {
     );
   }
 
-  Widget _buildCarsList(bool isMobile) {
-    return _buildCarCard(
-      name: 'مرسيدس بنز E-Class',
-      type: 'سيدان فاخرة',
-      price: '650\$',
-      pickup: '10 يونيو 2025',
-      dropoff: '15 يونيو 2025',
-      location: 'مطار الدوحة الدولي (الاستلام)',
-      status: 'نشط',
-      statusColor: Colors.greenAccent,
-      icon: Icons.directions_car,
-      features: ['أوتوماتيك', 'تأمين شامل', 'نظام GPS'],
+  Widget _buildCarsList(List<CarBookingEntity> bookings, bool isMobile) {
+    if (bookings.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.0),
+          child: Text(
+            'لا توجد حجوزات سيارات',
+            style: TextStyle(color: AppColors.textMuted),
+          ),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: bookings.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      itemBuilder: (context, index) {
+        final booking = bookings[index];
+        return _buildCarCard(
+          name: booking.car,
+          type: 'سيارة مستأجرة',
+          price: '\$${booking.price}',
+          pickup: DateFormat('dd MMM yyyy').format(booking.pickupDate),
+          dropoff: DateFormat('dd MMM yyyy').format(booking.returnDate),
+          location: booking.route,
+          status: booking.status,
+          duration: booking.duration,
+          statusColor: booking.status == 'confirmed'
+              ? Colors.greenAccent
+              : (booking.status == 'pending' ? Colors.orangeAccent : Colors.redAccent),
+          icon: Icons.directions_car,
+          features: ['تأمين شامل'],
+        );
+      },
     );
   }
 
@@ -214,6 +271,7 @@ class _ClientCarsPageState extends ConsumerState<ClientCarsPage> {
     required String dropoff,
     required String location,
     required String status,
+    required String duration,
     required Color statusColor,
     required IconData icon,
     required List<String> features,
@@ -272,9 +330,9 @@ class _ClientCarsPageState extends ConsumerState<ClientCarsPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Text(
-                    'إجمالي 5 أيام',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 9),
+                  Text(
+                    duration,
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 9),
                   ),
                 ],
               ),

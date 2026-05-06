@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_text.dart';
 import '../../../../core/widgets/glass_container.dart';
+import '../state/me_dashboard_cubit.dart';
+import '../state/me_dashboard_state.dart';
+import '../../domain/entities/me_dashboard_entity.dart';
 
 class ClientProfilePage extends StatelessWidget {
   const ClientProfilePage({super.key});
@@ -10,37 +14,53 @@ class ClientProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 800;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(isMobile ? 16.0 : 32.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          _buildHeader(isMobile),
-          const SizedBox(height: 32),
-
-          // Profile Header Card
-          _buildProfileHeaderCard(isMobile),
-          const SizedBox(height: 32),
-
-          // Main Settings Grid
-          if (!isMobile)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 2, child: _buildPersonalInfo()),
-                const SizedBox(width: 24),
-                Expanded(child: _buildSideSettings()),
-              ],
-            )
-          else ...[
-            _buildPersonalInfo(),
-            const SizedBox(height: 24),
-            _buildSideSettings(),
-          ],
-          const SizedBox(height: 40),
-        ],
-      ),
+    return BlocBuilder<MeDashboardCubit, MeDashboardState>(
+      builder: (context, state) {
+        if (state is MeDashboardLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is MeDashboardError) {
+          return Center(
+            child: Text(
+              state.message,
+              style: const TextStyle(color: Colors.redAccent),
+            ),
+          );
+        } else if (state is MeDashboardLoaded) {
+          return RefreshIndicator(
+            onRefresh: () => context.read<MeDashboardCubit>().refresh(),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(isMobile ? 16.0 : 32.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(isMobile),
+                  const SizedBox(height: 32),
+                  _buildRoleBadgeCard(state.data),
+                  const SizedBox(height: 32),
+                  _buildKPIGrid(state.data.kpis, isMobile),
+                  const SizedBox(height: 32),
+                  if (!isMobile)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 2, child: _buildPersonalInfo()),
+                        const SizedBox(width: 24),
+                        Expanded(child: _buildSideSettings()),
+                      ],
+                    )
+                  else ...[
+                    _buildPersonalInfo(),
+                    const SizedBox(height: 24),
+                    _buildSideSettings(),
+                  ],
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 
@@ -77,7 +97,10 @@ class ClientProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeaderCard(bool isMobile) {
+  Widget _buildRoleBadgeCard(MeDashboardEntity data) {
+    final roleLabel = _roleLabel(data.role);
+    final roleColor = _roleColor(data.role);
+
     return GlassContainer(
       padding: const EdgeInsets.all(24),
       child: Row(
@@ -85,15 +108,15 @@ class ClientProfilePage extends StatelessWidget {
           Stack(
             children: [
               CircleAvatar(
-                radius: isMobile ? 40 : 50,
-                backgroundColor: Colors.blueAccent.withOpacity(0.1),
-                child: const Icon(
+                radius: 50,
+                backgroundColor: roleColor.withOpacity(0.1),
+                child: Icon(
                   Icons.person,
-                  color: Colors.blueAccent,
+                  color: roleColor,
                   size: 40,
                 ),
               ),
-              Position8(
+              Positioned(
                 bottom: 0,
                 right: 0,
                 child: Container(
@@ -117,42 +140,114 @@ class ClientProfilePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'محمد علي',
+                  'مستخدم النظام',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Text(
-                  'moh.ali@example.com',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                const SizedBox(height: 4),
+                Text(
+                  'دور: $roleLabel',
+                  style: const TextStyle(
+                      color: AppColors.textMuted, fontSize: 13),
                 ),
                 const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _buildBadge('عميل متميز (Gold)', Colors.amber),
-                    _buildBadge('عضو منذ 2023', Colors.blueAccent),
-                  ],
-                ),
+                _buildBadge(roleLabel, roleColor),
               ],
             ),
           ),
-          if (!isMobile)
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.05),
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: AppColors.glassBorder),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKPIGrid(MeDashboardKPIEntity kpis, bool isMobile) {
+    return GridView.count(
+      crossAxisCount: isMobile ? 2 : 4,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      childAspectRatio: 1.5,
+      children: [
+        _buildKPICard(
+          'وكالات B2B',
+          kpis.b2bAgencies.toString(),
+          kpis.b2bDelta,
+          Icons.business,
+          Colors.purpleAccent,
+        ),
+        _buildKPICard(
+          'عملاء B2C',
+          kpis.b2cCustomers.toString(),
+          kpis.b2cDelta,
+          Icons.people_outline,
+          Colors.blueAccent,
+        ),
+        _buildKPICard(
+          'إجمالي الأرباح',
+          kpis.formattedProfit,
+          kpis.profitDelta,
+          Icons.attach_money,
+          Colors.greenAccent,
+        ),
+        _buildKPICard(
+          'إجمالي الحجوزات',
+          kpis.totalBookings.toString(),
+          kpis.bookingsDelta,
+          Icons.airplane_ticket_outlined,
+          Colors.orangeAccent,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildKPICard(
+    String title,
+    String value,
+    String delta,
+    IconData icon,
+    Color color,
+  ) {
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      animateHover: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                      color: AppColors.textMuted, fontSize: 11),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              child: const Text('تعديل الملف'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (delta.isNotEmpty)
+            Text(
+              delta,
+              style: TextStyle(color: color, fontSize: 10),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
         ],
       ),
@@ -193,7 +288,7 @@ class ClientProfilePage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          _buildTextField('الاسم الكامل', 'محمد علي'),
+          _buildTextField('الاسم الكامل', 'مستخدم النظام'),
           const SizedBox(height: 16),
           _buildTextField('رقم الهاتف', '+966 50 123 4567'),
           const SizedBox(height: 16),
@@ -294,20 +389,36 @@ class ClientProfilePage extends StatelessWidget {
             style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
           const Spacer(),
-          const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 16),
+          const Icon(Icons.chevron_right,
+              color: AppColors.textMuted, size: 16),
         ],
       ),
     );
   }
-}
 
-class Position8 extends StatelessWidget {
-  final Widget child;
-  final double? bottom;
-  final double? right;
-  const Position8({super.key, required this.child, this.bottom, this.right});
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(bottom: bottom, right: right, child: child);
+  String _roleLabel(String role) {
+    switch (role) {
+      case 'admin':
+        return 'مدير النظام';
+      case 'b2b':
+        return 'وكالة سفر';
+      case 'b2c':
+        return 'عميل';
+      default:
+        return role;
+    }
+  }
+
+  Color _roleColor(String role) {
+    switch (role) {
+      case 'admin':
+        return Colors.purpleAccent;
+      case 'b2b':
+        return Colors.blueAccent;
+      case 'b2c':
+        return Colors.orangeAccent;
+      default:
+        return Colors.white;
+    }
   }
 }

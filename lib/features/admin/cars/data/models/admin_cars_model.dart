@@ -13,7 +13,7 @@ class AdminCarsModel extends AdminCarsEntity {
     final data = json['data'] ?? json;
     final kpisJson = data['kpis'] ?? {};
     final filtersJson = data['filters'] ?? {};
-    final bookingsJson = (data['bookings'] as List?) ?? [];
+    final bookingsJson = (data['activeBookings'] as List?) ?? (data['bookings'] as List?) ?? [];
     final dateRangeJson = data['dateRange'] ?? {};
 
     return AdminCarsModel(

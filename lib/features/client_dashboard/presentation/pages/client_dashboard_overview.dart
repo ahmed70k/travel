@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_text.dart';
 import '../../../../core/widgets/glass_container.dart';
+import '../state/b2c_overview_cubit.dart';
+import '../state/b2c_overview_state.dart';
+import '../../domain/entities/b2c_overview_entity.dart';
 
 class ClientDashboardOverview extends StatefulWidget {
   const ClientDashboardOverview({super.key});
@@ -12,68 +17,62 @@ class ClientDashboardOverview extends StatefulWidget {
 }
 
 class _ClientDashboardOverviewState extends State<ClientDashboardOverview> {
-  late ScrollController _scrollController;
-
-  @override
-  void initState() {
-    super.initState();
-    // Start at the far right for RTL
-    _scrollController = ScrollController();
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 800;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(isMobile ? 16.0 : 32.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Welcome Header
-          _buildWelcomeHeader(isMobile),
-          const SizedBox(height: 32),
-
-          // Offers Slider (Aligned with Admin)
-          _buildOffersSlider(context, isMobile),
-          const SizedBox(height: 32),
-
-          // Quick Stats & Next Trip
-          if (!isMobile)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 2, child: _buildNextTripCard()),
-                const SizedBox(width: 24),
-                Expanded(child: _buildLoyaltySmallCard()),
-              ],
-            )
-          else ...[
-            _buildNextTripCard(),
-            const SizedBox(height: 24),
-            _buildLoyaltySmallCard(),
-          ],
-          const SizedBox(height: 32),
-
-          // Recent Activity
-          const Text(
-            'الأنشطة الأخيرة',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildRecentActivity(),
-          const SizedBox(height: 40),
-        ],
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: BlocBuilder<B2COverviewCubit, B2COverviewState>(
+        builder: (context, state) {
+          if (state is B2COverviewLoading) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state is B2COverviewError) {
+            return Center(
+              child: Text(
+                state.message,
+                style: const TextStyle(color: Colors.redAccent),
+              ),
+            );
+          } else if (state is B2COverviewLoaded) {
+            return RefreshIndicator(
+              onRefresh: () => context.read<B2COverviewCubit>().refresh(),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(isMobile ? 16.0 : 32.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildWelcomeHeader(isMobile),
+                    const SizedBox(height: 32),
+                    _buildKPIs(context, state.overview.kpis, isMobile),
+                    const SizedBox(height: 32),
+                    if (isMobile) ...[
+                      _buildDistributionChart(state.overview.customerDistribution),
+                      const SizedBox(height: 32),
+                      _buildGrowthChart(state.overview.growthLast6Months),
+                    ] else
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _buildDistributionChart(
+                                state.overview.customerDistribution),
+                          ),
+                          const SizedBox(width: 24),
+                          Expanded(
+                            flex: 2,
+                            child: _buildGrowthChart(
+                                state.overview.growthLast6Months),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        },
       ),
     );
   }
@@ -86,12 +85,12 @@ class _ClientDashboardOverviewState extends State<ClientDashboardOverview> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'مرحباً بك مجدداً،',
+              'نظرة عامة (B2C)',
               style: TextStyle(color: AppColors.textMuted, fontSize: 16),
             ),
             const SizedBox(height: 4),
             NeonText(
-              'محمد علي 👋',
+              'أداء العملاء 👋',
               style: TextStyle(
                 fontSize: isMobile ? 28 : 36,
                 fontWeight: FontWeight.bold,
@@ -99,375 +98,257 @@ class _ClientDashboardOverviewState extends State<ClientDashboardOverview> {
             ),
           ],
         ),
-        if (!isMobile) _buildWeatherWidget(),
       ],
     );
   }
 
-  Widget _buildWeatherWidget() {
-    return GlassContainer(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: const Row(
-        children: [
-          Icon(Icons.wb_sunny_rounded, color: Colors.amber, size: 24),
-          SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'الرياض، السعودية',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                '32°C - مشمس',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 10),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOffersSlider(BuildContext context, bool isMobile) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'أفضل العروض المختارة لك',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: isMobile ? 200 : 250,
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: ListView(
-              controller: _scrollController,
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              children: [
-                _buildOfferSlide(
-                  'استمتع بصيف المالديف',
-                  'خصم يصل إلى 30% على المنتجعات الفاخرة',
-                  Colors.cyanAccent,
-                  Icons.beach_access,
-                  screenWidth,
-                ),
-                const SizedBox(width: 20),
-                _buildOfferSlide(
-                  'موسم العروض في اسطنبول',
-                  'تذاكر طيران تبدأ من 250\$ شاملة الوزن',
-                  Colors.purpleAccent,
-                  Icons.local_airport,
-                  screenWidth,
-                ),
-                const SizedBox(width: 20),
-                _buildOfferSlide(
-                  'دبي ترحب بك',
-                  'احجز ليلتين واحصل على الثالثة مجاناً',
-                  Colors.orangeAccent,
-                  Icons.location_city,
-                  screenWidth,
-                ),
-              ],
+  Widget _buildKPIs(BuildContext context, B2CKPIEntity kpis, bool isMobile) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        int crossAxisCount = isMobile ? 2 : 4;
+        return GridView.count(
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: 1.5,
+          children: [
+            _buildKpiCard(
+              'إجمالي العملاء',
+              kpis.totalCustomers.toString(),
+              Icons.people_outline,
+              Colors.blueAccent,
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOfferSlide(
-    String title,
-    String subtitle,
-    Color color,
-    IconData icon,
-    double screenWidth,
-  ) {
-    return GlassContainer(
-      width: screenWidth < 500 ? screenWidth * 0.8 : 400,
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [color.withOpacity(0.2), Colors.transparent],
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Row(
-        children: [
-          Icon(icon, color: color.withOpacity(0.5), size: 60),
-          const SizedBox(width: 20),
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 11,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.1),
-                      foregroundColor: Colors.white,
-                      side: BorderSide(color: color.withOpacity(0.5)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                    ),
-                    child: const Text(
-                      'احجز الآن',
-                      style: TextStyle(fontSize: 11),
-                    ),
-                  ),
-                ],
-              ),
+            _buildKpiCard(
+              'إجمالي القيمة',
+              '\$${kpis.totalValue}',
+              Icons.attach_money,
+              Colors.greenAccent,
             ),
-          ),
-        ],
-      ),
+            _buildKpiCard(
+              'عملاء هذا الشهر',
+              kpis.newThisMonth.toString(),
+              Icons.person_add_alt_1_outlined,
+              Colors.purpleAccent,
+            ),
+            _buildKpiCard(
+              'متوسط الإنفاق',
+              '\$${kpis.avgSpend}',
+              Icons.show_chart,
+              Colors.orangeAccent,
+            ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildNextTripCard() {
+  Widget _buildKpiCard(
+      String title, String value, IconData icon, Color color) {
     return GlassContainer(
-      padding: const EdgeInsets.all(24),
-      animateHover: true,
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'رحلتك القادمة',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Icon(Icons.timer_outlined, color: Colors.greenAccent, size: 20),
-            ],
-          ),
-          const SizedBox(height: 24),
           Row(
             children: [
-              const Column(
-                children: [
-                  Text(
-                    '12',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'يوماً',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 32),
+              Icon(icon, color: color, size: 24),
+              const SizedBox(width: 8),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'الدوحة ← لندن',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      '20 مايو 2025 · الخطوط القطرية',
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    LinearProgressIndicator(
-                      value: 0.7,
-                      backgroundColor: Colors.white.withOpacity(0.05),
-                      valueColor: const AlwaysStoppedAnimation(
-                        Colors.greenAccent,
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ],
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 14,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoyaltySmallCard() {
-    return GlassContainer(
-      padding: const EdgeInsets.all(24),
-      gradient: const LinearGradient(
-        colors: [Colors.purpleAccent, Colors.transparent],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Icon(Icons.diamond_outlined, color: Colors.white, size: 24),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text(
-                  'المستوى الذهبي',
-                  style: TextStyle(color: Colors.white, fontSize: 9),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            '24,500',
-            style: TextStyle(
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: const TextStyle(
               color: Colors.white,
-              fontSize: 32,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDistributionChart(List<CustomerDistributionEntity> data) {
+    if (data.isEmpty) return const SizedBox();
+
+    final colors = [Colors.blueAccent, Colors.purpleAccent, Colors.orangeAccent];
+
+    return GlassContainer(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           const Text(
-            'نقطة ولاء مكافأة',
-            style: TextStyle(color: Colors.white70, fontSize: 12),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'استبدل نقاطك الآن',
+            'توزيع العملاء',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 11,
-              decoration: TextDecoration.underline,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 200,
+            child: PieChart(
+              PieChartData(
+                sectionsSpace: 2,
+                centerSpaceRadius: 40,
+                sections: data.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
+                  return PieChartSectionData(
+                    color: colors[index % colors.length],
+                    value: item.value.toDouble(),
+                    title: '${item.value}',
+                    radius: 50,
+                    titleStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: data.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: colors[index % colors.length],
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    item.type,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ],
+              );
+            }).toList(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildRecentActivity() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: 3,
-      itemBuilder: (context, index) {
-        final items = [
-          {
-            'title': 'حجز فندق بورتو السخنة',
-            'time': 'منذ ساعتين',
-            'icon': Icons.hotel,
-            'color': Colors.pinkAccent,
-          },
-          {
-            'title': 'تم تأكيد حجز الطيران إلى لندن',
-            'time': 'منذ يوم',
-            'icon': Icons.flight,
-            'color': Colors.greenAccent,
-          },
-          {
-            'title': 'استلام سيارة مرسيدس في مطار الدوحة',
-            'time': 'الأسبوع القادم',
-            'icon': Icons.directions_car,
-            'color': Colors.blueAccent,
-          },
-        ];
-        final item = items[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.03),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.glassBorder),
+  Widget _buildGrowthChart(List<GrowthEntity> data) {
+    if (data.isEmpty) return const SizedBox();
+
+    return GlassContainer(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'النمو (آخر 6 أشهر)',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          child: Row(
-            children: [
-              Icon(
-                item['icon'] as IconData,
-                color: item['color'] as Color,
-                size: 20,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item['title'] as String,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 250,
+            child: LineChart(
+              LineChartData(
+                gridData: const FlGridData(show: false),
+                titlesData: FlTitlesData(
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        if (value.toInt() >= 0 && value.toInt() < data.length) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              data[value.toInt()].month,
+                              style: const TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 10,
+                              ),
+                            ),
+                          );
+                        }
+                        return const SizedBox();
+                      },
+                      reservedSize: 30,
                     ),
-                    Text(
-                      item['time'] as String,
-                      style: const TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 10,
-                      ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          value.toInt().toString(),
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 10,
+                          ),
+                        );
+                      },
+                      reservedSize: 40,
                     ),
-                  ],
+                  ),
                 ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: data.asMap().entries.map((entry) {
+                      return FlSpot(
+                        entry.key.toDouble(),
+                        entry.value.value.toDouble(),
+                      );
+                    }).toList(),
+                    isCurved: true,
+                    color: Colors.cyanAccent,
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: true),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: Colors.cyanAccent.withOpacity(0.1),
+                    ),
+                  ),
+                ],
               ),
-              const Icon(
-                Icons.chevron_right,
-                color: AppColors.textMuted,
-                size: 16,
-              ),
-            ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'http://192.168.1.21:4000/api';
+  static const String baseUrl = 'https://office10.runasp.net/api';
 
   // Auth Endpoints
   static const String login = '/auth/login';
@@ -9,4 +9,10 @@ class ApiConstants {
 
   // Admin Dashboard Endpoints
   static const String adminOverview = '/dashboard/admin/overview';
+
+  // B2C Dashboard Endpoints
+  static const String b2cOverview = '/dashboard/b2c/overview';
+
+  // Current User Dashboard
+  static const String meDashboard = '/dashboard/me';
 }
