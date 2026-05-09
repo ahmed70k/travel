@@ -40,29 +40,24 @@ class SplashPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<AuthCubit>()..checkAuth(),
-      child: BlocListener<AuthCubit, AuthState>(
-        listener: (context, state) {
-          if (state is Authenticated) {
-            _navigateToDashboard(context, state.user.role);
-          } else if (state is Unauthenticated || state is AuthError) {
-            // Unauthenticated means no token or 404, AuthError means network error.
-            // We route to login in both cases for now.
-            _navigateToLogin(context);
-          }
-        },
-        child: const Scaffold(
-          backgroundColor: Color(0xFF0F172A),
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.flight_takeoff, size: 80, color: Colors.blueAccent),
-                SizedBox(height: 24),
-                CircularProgressIndicator(color: Colors.blueAccent),
-              ],
-            ),
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is Authenticated) {
+          _navigateToDashboard(context, state.user.role);
+        } else if (state is Unauthenticated || state is AuthError) {
+          _navigateToLogin(context);
+        }
+      },
+      child: const Scaffold(
+        backgroundColor: Color(0xFF0F172A),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.flight_takeoff, size: 80, color: Colors.blueAccent),
+              SizedBox(height: 24),
+              CircularProgressIndicator(color: Colors.blueAccent),
+            ],
           ),
         ),
       ),

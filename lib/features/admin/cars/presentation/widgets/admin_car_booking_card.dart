@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:travle/core/theme/app_colors.dart';
 import 'package:travle/core/widgets/glass_container.dart';
-import '../../domain/entities/admin_cars_entity.dart';
+import '../../domain/entities/car_booking_entity.dart';
 
 class AdminCarBookingCard extends StatelessWidget {
   final CarBookingEntity booking;
@@ -57,17 +57,17 @@ class AdminCarBookingCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildInfoColumn(
-                'Pickup',
+                'الاستلام',
                 DateFormat('MMM dd, HH:mm').format(booking.pickupDate),
                 Icons.calendar_today_outlined,
               ),
               _buildInfoColumn(
-                'Return',
+                'التسليم',
                 DateFormat('MMM dd, HH:mm').format(booking.returnDate),
                 Icons.event_available_outlined,
               ),
               _buildInfoColumn(
-                'Price',
+                'السعر',
                 '\$${booking.price.toStringAsFixed(0)}',
                 Icons.attach_money,
                 isPrice: true,
@@ -86,15 +86,15 @@ class AdminCarBookingCard extends StatelessWidget {
     switch (status.toLowerCase()) {
       case 'confirmed':
         color = AppColors.success;
-        label = 'Confirmed';
+        label = 'مؤكد';
         break;
       case 'pending':
         color = AppColors.warning;
-        label = 'Pending';
+        label = 'قيد الانتظار';
         break;
       case 'cancelled':
         color = Colors.redAccent;
-        label = 'Cancelled';
+        label = 'ملغى';
         break;
       default:
         color = AppColors.textMuted;

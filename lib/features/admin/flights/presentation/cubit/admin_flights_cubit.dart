@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/usecases/get_admin_flights_usecase.dart';
+import '../../../../../core/error/failures.dart';
 import 'admin_flights_state.dart';
 
 class AdminFlightsCubit extends Cubit<AdminFlightsState> {
@@ -34,7 +35,7 @@ class AdminFlightsCubit extends Cubit<AdminFlightsState> {
     );
 
     result.fold(
-      (failure) => emit(AdminFlightsError(failure.message)),
+      (Failure failure) => emit(AdminFlightsError(failure.message)),
       (data) => emit(AdminFlightsLoaded(data)),
     );
   }

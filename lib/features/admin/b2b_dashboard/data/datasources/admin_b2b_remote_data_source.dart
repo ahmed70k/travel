@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:travle/features/admin/b2b_dashboard/data/models/admin_b2b_model.dart';
+import '../../../../../core/network/api_constants.dart';
 
 abstract class AdminB2BRemoteDataSource {
   Future<AdminB2BModel> getDashboard({DateTime? from, DateTime? to});
@@ -21,7 +22,7 @@ class AdminB2BRemoteDataSourceImpl implements AdminB2BRemoteDataSource {
     }
 
     final response = await dio.get(
-      '/api/dashboard/admin/b2b',
+      ApiConstants.adminB2B,
       queryParameters: queryParameters.isNotEmpty ? queryParameters : null,
     );
 

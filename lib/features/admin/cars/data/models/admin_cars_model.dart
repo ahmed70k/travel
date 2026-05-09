@@ -1,4 +1,5 @@
 import '../../domain/entities/admin_cars_entity.dart';
+import 'car_booking_model.dart';
 
 class AdminCarsModel extends AdminCarsEntity {
   const AdminCarsModel({
@@ -64,32 +65,4 @@ class CarFiltersModel extends CarFiltersEntity {
   }
 }
 
-class CarBookingModel extends CarBookingEntity {
-  const CarBookingModel({
-    required super.id,
-    required super.car,
-    required super.from,
-    required super.to,
-    required super.pickupDate,
-    required super.returnDate,
-    required super.duration,
-    required super.price,
-    required super.status,
-    super.customer,
-  });
 
-  factory CarBookingModel.fromJson(Map<String, dynamic> json) {
-    return CarBookingModel(
-      id: json['id']?.toString() ?? '',
-      car: json['car']?.toString() ?? 'Unknown Car',
-      from: json['from']?.toString() ?? 'N/A',
-      to: json['to']?.toString() ?? 'N/A',
-      pickupDate: DateTime.tryParse(json['pickupDate'] ?? '') ?? DateTime.now(),
-      returnDate: DateTime.tryParse(json['returnDate'] ?? '') ?? DateTime.now(),
-      duration: json['duration']?.toString() ?? 'N/A',
-      price: (json['price'] ?? 0).toDouble(),
-      status: json['status']?.toString() ?? 'pending',
-      customer: json['customer']?.toString(),
-    );
-  }
-}

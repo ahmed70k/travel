@@ -5,11 +5,13 @@ import 'package:travle/core/theme/app_colors.dart';
 import 'package:travle/core/widgets/neon_text.dart';
 import '../cubit/admin_flights_cubit.dart';
 import '../cubit/admin_flights_state.dart';
-import '../../../../admin/dashboard/presentation/widgets/admin_date_filter.dart';
+import '../../../shared/presentation/widgets/components/admin_date_filter.dart';
 import '../widgets/admin_flight_kpi_cards.dart';
 import '../widgets/admin_flight_filters.dart';
 import '../widgets/admin_flight_booking_card.dart';
 import '../widgets/detailed_flight_table.dart';
+import '../widgets/create_flight_booking_dialog.dart';
+import '../cubit/create_flight_booking_cubit.dart';
 
 class AdminFlightsPage extends StatelessWidget {
   const AdminFlightsPage({super.key});
@@ -56,7 +58,7 @@ class AdminFlightsPage extends StatelessWidget {
                               Icon(Icons.airplane_ticket, color: AppColors.primary),
                               SizedBox(width: 8),
                               Text(
-                                'Recent Bookings',
+                                'الحجوزات الأخيرة',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -66,7 +68,7 @@ class AdminFlightsPage extends StatelessWidget {
                             ],
                           ),
                           Text(
-                            'Total: ${state.data.bookings.length}',
+                            'الإجمالي: ${state.data.bookings.length}',
                             style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                           ),
                         ],
@@ -112,16 +114,16 @@ class AdminFlightsPage extends StatelessWidget {
           children: [
             const Row(
               children: [
-                Text('Admin', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                Text('الإدارة', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                 SizedBox(width: 4),
                 Icon(Icons.chevron_left, color: AppColors.textMuted, size: 12),
                 SizedBox(width: 4),
-                Text('Flights', style: TextStyle(color: Colors.white, fontSize: 12)),
+                Text('الطيران', style: TextStyle(color: Colors.white, fontSize: 12)),
               ],
             ),
             const SizedBox(height: 12),
             NeonText(
-              'Flights Dashboard',
+              'لوحة تحكم الطيران',
               style: TextStyle(
                 fontSize: isMobile ? 28 : 40,
                 fontWeight: FontWeight.bold,
@@ -129,16 +131,51 @@ class AdminFlightsPage extends StatelessWidget {
             ),
           ],
         ),
-        if (!isMobile)
-          AdminDateFilter(
-            from: state.data.from,
-            to: state.data.to,
-            onDateChanged: (from, to) {
-              context.read<AdminFlightsCubit>().getFlights(from: from, to: to);
-            },
-          ),
+        Row(
+          children: [
+            if (!isMobile)
+              AdminDateFilter(
+                from: state.data.from,
+                to: state.data.to,
+                onDateChanged: (from, to) {
+                  context.read<AdminFlightsCubit>().getFlights(from: from, to: to);
+                },
+              ),
+            const SizedBox(width: 16),
+            ElevatedButton.icon(
+              onPressed: () => _showCreateDialog(context),
+              icon: const Icon(Icons.add, size: 20),
+              label: Text(isMobile ? 'إضافة' : 'إضافة حجز'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 12 : 20,
+                  vertical: isMobile ? 10 : 15,
+                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
       ],
     );
+  }
+
+  void _showCreateDialog(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (_) => BlocProvider.value(
+        value: sl<CreateFlightBookingCubit>(),
+        child: const CreateAdminFlightBookingDialog(),
+      ),
+    );
+
+    if (result == true) {
+      if (context.mounted) {
+        context.read<AdminFlightsCubit>().refresh();
+      }
+    }
   }
 
   Widget _buildLoading(bool isMobile) {
@@ -156,7 +193,7 @@ class AdminFlightsPage extends StatelessWidget {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => context.read<AdminFlightsCubit>().getFlights(),
-            child: const Text('Retry'),
+            child: const Text('إعادة المحاولة'),
           ),
         ],
       ),
@@ -171,7 +208,7 @@ class AdminFlightsPage extends StatelessWidget {
           Icon(Icons.airplane_ticket_outlined, color: Colors.white.withOpacity(0.1), size: 80),
           const SizedBox(height: 16),
           const Text(
-            'No flight bookings found',
+            'لم يتم العثور على حجوزات طيران',
             style: TextStyle(color: AppColors.textMuted, fontSize: 16),
           ),
         ],

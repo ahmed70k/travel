@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/dependency_injection.dart';
+import '../cubit/auth_cubit.dart';
 import '../cubit/login_cubit.dart';
 import '../cubit/login_state.dart';
 
@@ -76,6 +77,7 @@ class _LoginPageState extends State<LoginPage> {
                 child: BlocConsumer<LoginCubit, LoginState>(
                   listener: (context, state) {
                     if (state is LoginSuccess) {
+                      context.read<AuthCubit>().checkAuth();
                       _navigateToDashboard(context, state.role);
                     } else if (state is LoginError) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -102,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 24),
                           const Text(
-                            "Welcome Back",
+                            "مرحباً بعودتك",
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 28,
@@ -115,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                             controller: _emailController,
                             style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
-                              labelText: "Email",
+                              labelText: "البريد الإلكتروني",
                               labelStyle: TextStyle(
                                 color: Colors.white.withOpacity(0.6),
                               ),
@@ -138,9 +140,9 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             validator: (val) {
                               if (val == null || val.isEmpty)
-                                return 'Please enter your email';
+                                return 'يرجى إدخال البريد الإلكتروني';
                               if (!val.contains('@'))
-                                return 'Please enter a valid email';
+                                return 'يرجى إدخال بريد إلكتروني صالح';
                               return null;
                             },
                           ),
@@ -150,7 +152,7 @@ class _LoginPageState extends State<LoginPage> {
                             obscureText: true,
                             style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
-                              labelText: "Password",
+                              labelText: "كلمة المرور",
                               labelStyle: TextStyle(
                                 color: Colors.white.withOpacity(0.6),
                               ),
@@ -173,8 +175,8 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             validator: (val) {
                               if (val == null || val.isEmpty)
-                                return 'Please enter your password';
-                              if (val.length < 6) return 'Password too short';
+                                return 'يرجى إدخال كلمة المرور';
+                              if (val.length < 6) return 'كلمة المرور قصيرة جداً';
                               return null;
                             },
                           ),
@@ -207,7 +209,7 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                   )
                                 : const Text(
-                                    "Login",
+                                    "تسجيل الدخول",
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,

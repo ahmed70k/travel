@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'car_booking_entity.dart';
 
 class CarKPIEntity extends Equatable {
   final int totalCarBookings;
@@ -41,47 +42,7 @@ class CarFiltersEntity extends Equatable {
   List<Object?> get props => [carTypes, categories];
 }
 
-class CarBookingEntity extends Equatable {
-  final String id;
-  final String car;
-  final String from;
-  final String to;
-  final DateTime pickupDate;
-  final DateTime returnDate;
-  final String duration;
-  final double price;
-  final String status; // confirmed / pending / cancelled
-  final String? customer;
 
-  const CarBookingEntity({
-    required this.id,
-    required this.car,
-    required this.from,
-    required this.to,
-    required this.pickupDate,
-    required this.returnDate,
-    required this.duration,
-    required this.price,
-    required this.status,
-    this.customer,
-  });
-
-  String get route => '$from ➔ $to';
-
-  @override
-  List<Object?> get props => [
-        id,
-        car,
-        from,
-        to,
-        pickupDate,
-        returnDate,
-        duration,
-        price,
-        status,
-        customer,
-      ];
-}
 
 class AdminCarsEntity extends Equatable {
   final CarKPIEntity kpis;

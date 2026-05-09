@@ -27,7 +27,7 @@ class _AdminFlightFiltersState extends State<AdminFlightFilters> {
       children: [
         // Trip Type
         const Text(
-          'Trip Type',
+          'نوع الرحلة',
           style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
@@ -60,7 +60,7 @@ class _AdminFlightFiltersState extends State<AdminFlightFilters> {
 
         // Categories
         const Text(
-          'Categories',
+          'الفئات',
           style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),

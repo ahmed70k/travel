@@ -3,13 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:travle/core/di/dependency_injection.dart';
 import 'package:travle/core/theme/app_colors.dart';
 import 'package:travle/core/widgets/neon_text.dart';
+
 import '../cubit/admin_cars_cubit.dart';
 import '../cubit/admin_cars_state.dart';
-import '../../../../admin/dashboard/presentation/widgets/admin_date_filter.dart';
+import '../../../shared/presentation/widgets/components/admin_date_filter.dart';
 import '../widgets/admin_car_kpi_cards.dart';
 import '../widgets/admin_car_filters.dart';
 import '../widgets/admin_car_booking_card.dart';
 import '../widgets/detailed_car_table.dart';
+
+import 'admin_car_bookings_page.dart';
+import 'create_car_booking_page.dart';
 
 class AdminCarsPage extends StatelessWidget {
   const AdminCarsPage({super.key});
@@ -56,7 +60,7 @@ class AdminCarsPage extends StatelessWidget {
                               Icon(Icons.directions_car, color: Colors.blueAccent),
                               SizedBox(width: 8),
                               const Text(
-                                'Active Rentals',
+                                'الإيجارات النشطة',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -66,7 +70,7 @@ class AdminCarsPage extends StatelessWidget {
                             ],
                           ),
                           Text(
-                            'Total: ${state.data.bookings.length}',
+                            'الإجمالي: ${state.data.bookings.length}',
                             style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                           ),
                         ],
@@ -85,7 +89,9 @@ class AdminCarsPage extends StatelessWidget {
                         ),
                       const SizedBox(height: 32),
                       if (!isMobile) ...[
-                        DetailedCarTable(bookings: state.data.bookings),
+                        DetailedCarTable(
+                          bookings: state.data.bookings,
+                        ),
                         const SizedBox(height: 40),
                       ],
                     ],
@@ -103,25 +109,29 @@ class AdminCarsPage extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, AdminCarsLoaded state, bool isMobile) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.end,
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.end,
+      spacing: 16,
+      runSpacing: 16,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Admin', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                Text('الإدارة', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                 SizedBox(width: 4),
                 Icon(Icons.chevron_left, color: AppColors.textMuted, size: 12),
                 SizedBox(width: 4),
-                Text('Cars', style: TextStyle(color: Colors.white, fontSize: 12)),
+                Text('السيارات', style: TextStyle(color: Colors.white, fontSize: 12)),
               ],
             ),
             const SizedBox(height: 12),
             NeonText(
-              'Cars Dashboard',
+              'لوحة تحكم السيارات',
               style: TextStyle(
                 fontSize: isMobile ? 28 : 40,
                 fontWeight: FontWeight.bold,
@@ -129,14 +139,60 @@ class AdminCarsPage extends StatelessWidget {
             ),
           ],
         ),
-        if (!isMobile)
-          AdminDateFilter(
-            from: state.data.from,
-            to: state.data.to,
-            onDateChanged: (from, to) {
-              context.read<AdminCarsCubit>().getCars(from: from, to: to);
-            },
-          ),
+        Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            if (!isMobile)
+              AdminDateFilter(
+                from: state.data.from,
+                to: state.data.to,
+                onDateChanged: (from, to) {
+                  context.read<AdminCarsCubit>().getCars(from: from, to: to);
+                },
+              ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CreateCarBookingPage()),
+                );
+                if (result == true && context.mounted) {
+                  context.read<AdminCarsCubit>().refresh();
+                }
+              },
+              icon: const Icon(Icons.add, size: 20),
+              label: Text(isMobile ? 'إضافة' : 'إضافة حجز'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 12 : 20,
+                  vertical: isMobile ? 10 : 15,
+                ),
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminCarBookingsPage()),
+                );
+              },
+              icon: const Icon(Icons.list_alt, size: 20),
+              label: Text(isMobile ? 'الحجوزات' : 'إدارة الحجوزات'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 12 : 20,
+                  vertical: isMobile ? 10 : 15,
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -156,7 +212,7 @@ class AdminCarsPage extends StatelessWidget {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => context.read<AdminCarsCubit>().getCars(),
-            child: const Text('Retry'),
+            child: const Text('إعادة المحاولة'),
           ),
         ],
       ),
@@ -171,7 +227,7 @@ class AdminCarsPage extends StatelessWidget {
           Icon(Icons.directions_car_outlined, color: Colors.white.withOpacity(0.1), size: 80),
           const SizedBox(height: 16),
           const Text(
-            'No car rentals found',
+            'لم يتم العثور على تأجير سيارات',
             style: TextStyle(color: AppColors.textMuted, fontSize: 16),
           ),
         ],

@@ -1,4 +1,5 @@
 import 'package:travle/core/network/dio_client.dart';
+import '../models/create_flight_booking_request.dart';
 import '../models/admin_flights_model.dart';
 
 abstract class AdminFlightsRemoteDataSource {
@@ -8,6 +9,8 @@ abstract class AdminFlightsRemoteDataSource {
     String? tripType,
     String? category,
   });
+
+  Future<FlightBookingModel> createFlight(CreateFlightBookingRequest request);
 }
 
 class AdminFlightsRemoteDataSourceImpl implements AdminFlightsRemoteDataSource {
@@ -32,5 +35,14 @@ class AdminFlightsRemoteDataSourceImpl implements AdminFlightsRemoteDataSource {
       },
     );
     return AdminFlightsModel.fromJson(response.data);
+  }
+
+  @override
+  Future<FlightBookingModel> createFlight(CreateFlightBookingRequest request) async {
+    final response = await dioClient.dio.post(
+      '/bookings/flights',
+      data: request.toJson(),
+    );
+    return FlightBookingModel.fromJson(response.data);
   }
 }

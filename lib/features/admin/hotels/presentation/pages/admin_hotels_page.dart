@@ -5,11 +5,12 @@ import 'package:travle/core/theme/app_colors.dart';
 import 'package:travle/core/widgets/neon_text.dart';
 import '../cubit/admin_hotels_cubit.dart';
 import '../cubit/admin_hotels_state.dart';
-import '../../../../admin/dashboard/presentation/widgets/admin_date_filter.dart';
+import '../../../shared/presentation/widgets/components/admin_date_filter.dart';
 import '../widgets/admin_hotel_kpi_cards.dart';
 import '../widgets/admin_hotel_filters.dart';
 import '../widgets/admin_hotel_booking_card.dart';
 import '../widgets/detailed_hotel_table.dart';
+import 'create_hotel_booking_page.dart';
 
 class AdminHotelsPage extends StatelessWidget {
   const AdminHotelsPage({super.key});
@@ -56,7 +57,7 @@ class AdminHotelsPage extends StatelessWidget {
                               Icon(Icons.hotel_outlined, color: AppColors.primary),
                               SizedBox(width: 8),
                               Text(
-                                'Recent Bookings',
+                                'الحجوزات الأخيرة',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -66,7 +67,7 @@ class AdminHotelsPage extends StatelessWidget {
                             ],
                           ),
                           Text(
-                            'Total: ${state.data.bookings.length}',
+                            'الإجمالي: ${state.data.bookings.length}',
                             style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                           ),
                         ],
@@ -112,16 +113,16 @@ class AdminHotelsPage extends StatelessWidget {
           children: [
             const Row(
               children: [
-                Text('Admin', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                Text('الإدارة', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                 SizedBox(width: 4),
                 Icon(Icons.chevron_left, color: AppColors.textMuted, size: 12),
                 SizedBox(width: 4),
-                Text('Hotels', style: TextStyle(color: Colors.white, fontSize: 12)),
+                Text('الفنادق', style: TextStyle(color: Colors.white, fontSize: 12)),
               ],
             ),
             const SizedBox(height: 12),
             NeonText(
-              'Hotels Dashboard',
+              'لوحة تحكم الفنادق',
               style: TextStyle(
                 fontSize: isMobile ? 28 : 40,
                 fontWeight: FontWeight.bold,
@@ -129,14 +130,40 @@ class AdminHotelsPage extends StatelessWidget {
             ),
           ],
         ),
-        if (!isMobile)
-          AdminDateFilter(
-            from: state.data.from,
-            to: state.data.to,
-            onDateChanged: (from, to) {
-              context.read<AdminHotelsCubit>().getHotels(from: from, to: to);
-            },
-          ),
+        Row(
+          children: [
+            if (!isMobile)
+              AdminDateFilter(
+                from: state.data.from,
+                to: state.data.to,
+                onDateChanged: (from, to) {
+                  context.read<AdminHotelsCubit>().getHotels(from: from, to: to);
+                },
+              ),
+            const SizedBox(width: 16),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CreateHotelBookingPage()),
+                );
+                if (result == true && context.mounted) {
+                  context.read<AdminHotelsCubit>().refresh();
+                }
+              },
+              icon: const Icon(Icons.add, size: 20),
+              label: Text(isMobile ? 'إضافة' : 'حجز جديد'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 12 : 20,
+                  vertical: isMobile ? 10 : 15,
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -156,7 +183,7 @@ class AdminHotelsPage extends StatelessWidget {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => context.read<AdminHotelsCubit>().getHotels(),
-            child: const Text('Retry'),
+            child: const Text('إعادة المحاولة'),
           ),
         ],
       ),
@@ -171,7 +198,7 @@ class AdminHotelsPage extends StatelessWidget {
           Icon(Icons.hotel_outlined, color: Colors.white.withOpacity(0.1), size: 80),
           const SizedBox(height: 16),
           const Text(
-            'No hotel bookings found',
+            'لم يتم العثور على حجوزات فنادق',
             style: TextStyle(color: AppColors.textMuted, fontSize: 16),
           ),
         ],

@@ -17,7 +17,7 @@ class TopAgenciesBarChart extends StatelessWidget {
         padding: EdgeInsets.all(24),
         child: Center(
           child: Text(
-            'No top agencies data available',
+            'لا تتوفر بيانات لأفضل الوكالات',
             style: TextStyle(color: AppColors.textMuted),
           ),
         ),
@@ -36,7 +36,7 @@ class TopAgenciesBarChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Top B2B Agencies (Sales)',
+            'أفضل وكالات B2B (المبيعات)',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: AppColors.textMain,

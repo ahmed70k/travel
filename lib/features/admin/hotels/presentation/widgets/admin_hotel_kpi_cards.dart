@@ -21,28 +21,28 @@ class AdminHotelKPICards extends StatelessWidget {
       childAspectRatio: isMobile ? 2.0 : 1.4,
       children: [
         _buildStatCard(
-          'Total Bookings',
+          'إجمالي الحجوزات',
           kpis.totalHotelBookings.toString(),
           kpis.bookingsDelta,
           Icons.hotel,
           Colors.orangeAccent,
         ),
         _buildStatCard(
-          'Revenue',
+          'الإيرادات',
           '\$${kpis.hotelRevenue.toStringAsFixed(1)}k',
           kpis.revenueDelta,
           Icons.monetization_on,
           AppColors.success,
         ),
         _buildStatCard(
-          'Avg Occupancy',
+          'متوسط الإشغال',
           '${kpis.avgOccupancy.toStringAsFixed(1)}%',
           null,
           Icons.percent,
           Colors.blueAccent,
         ),
         _buildStatCard(
-          'Hotel Partners',
+          'شركاء الفنادق',
           kpis.hotelPartners.toString(),
           null,
           Icons.business,

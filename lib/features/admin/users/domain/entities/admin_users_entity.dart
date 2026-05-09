@@ -1,62 +1,52 @@
 import 'package:equatable/equatable.dart';
 
-class UserKPIEntity extends Equatable {
-  final int totalUsers;
-  final int b2bAgencies;
-  final int b2cCustomers;
-  final int newThisMonth;
-
-  const UserKPIEntity({
-    required this.totalUsers,
-    required this.b2bAgencies,
-    required this.b2cCustomers,
-    required this.newThisMonth,
-  });
-
-  @override
-  List<Object?> get props => [totalUsers, b2bAgencies, b2cCustomers, newThisMonth];
-}
-
 class UserEntity extends Equatable {
   final String id;
   final String name;
-  final String accountType; // Admin / B2B / B2C
   final String email;
-  final DateTime registeredAt;
-  final int bookingsCount;
-  final String status; // active / inactive
+  final String role;
+  final String status;
+  final DateTime createdAt;
 
   const UserEntity({
     required this.id,
     required this.name,
-    required this.accountType,
     required this.email,
-    required this.registeredAt,
-    required this.bookingsCount,
+    required this.role,
     required this.status,
+    required this.createdAt,
   });
 
   @override
-  List<Object?> get props => [
-        id,
-        name,
-        accountType,
-        email,
-        registeredAt,
-        bookingsCount,
-        status,
-      ];
+  List<Object?> get props => [id, name, email, role, status, createdAt];
 }
 
-class AdminUsersEntity extends Equatable {
-  final UserKPIEntity kpis;
-  final List<UserEntity> usersList;
+class PaginationEntity extends Equatable {
+  final int page;
+  final int limit;
+  final int total;
+  final int totalPages;
 
-  const AdminUsersEntity({
-    required this.kpis,
-    required this.usersList,
+  const PaginationEntity({
+    required this.page,
+    required this.limit,
+    required this.total,
+    required this.totalPages,
   });
 
   @override
-  List<Object?> get props => [kpis, usersList];
+  List<Object?> get props => [page, limit, total, totalPages];
+}
+
+class UsersResponseDataEntity extends Equatable {
+  final List<UserEntity> users;
+  final PaginationEntity pagination;
+
+  const UsersResponseDataEntity({
+    required this.users,
+    required this.pagination,
+  });
+
+  @override
+  List<Object?> get props => [users, pagination];
 }

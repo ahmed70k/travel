@@ -31,7 +31,7 @@ class _AgencyDistributionPieChartState extends State<AgencyDistributionPieChart>
         padding: EdgeInsets.all(24),
         child: Center(
           child: Text(
-            'No distribution data available',
+            'لا تتوفر بيانات للتوزيع',
             style: TextStyle(color: AppColors.textMuted),
           ),
         ),
@@ -44,7 +44,7 @@ class _AgencyDistributionPieChartState extends State<AgencyDistributionPieChart>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Agency Distribution',
+            'توزيع الوكالات',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: AppColors.textMain,

@@ -21,28 +21,28 @@ class AdminFlightKPICards extends StatelessWidget {
       childAspectRatio: isMobile ? 2.0 : 1.4,
       children: [
         _buildStatCard(
-          'Total Bookings',
+          'إجمالي الحجوزات',
           kpis.totalFlightBookings.toString(),
           kpis.bookingsDelta,
           Icons.airplane_ticket,
           Colors.blueAccent,
         ),
         _buildStatCard(
-          'Total Revenue',
+          'إجمالي الإيرادات',
           '\$${kpis.flightRevenue.toStringAsFixed(1)}k',
           kpis.revenueDelta,
           Icons.account_balance_wallet,
           AppColors.success,
         ),
         _buildStatCard(
-          'Occupancy Rate',
+          'نسبة الإشغال',
           '${kpis.occupancyRate.toStringAsFixed(1)}%',
           null,
           Icons.pie_chart,
           Colors.purpleAccent,
         ),
         _buildStatCard(
-          'Partner Airlines',
+          'شركات الطيران الشريكة',
           kpis.partnerAirlines.toString(),
           null,
           Icons.connecting_airports,

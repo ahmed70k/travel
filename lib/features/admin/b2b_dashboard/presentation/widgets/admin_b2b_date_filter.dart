@@ -69,52 +69,88 @@ class _AdminB2BDateFilterState extends State<AdminB2BDateFilter> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isVerySmall = width < 420; // Increased threshold
+
     return GlassContainer(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildDateButton(context, true, _from),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.0),
-            child: Text('-', style: TextStyle(color: AppColors.textMuted)),
-          ),
-          _buildDateButton(context, false, _to),
-          const SizedBox(width: 16),
-          ElevatedButton(
-            onPressed: () => widget.onApply(_from, _to),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+      padding: EdgeInsets.symmetric(horizontal: isVerySmall ? 12 : 16, vertical: 8),
+      child: isVerySmall 
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildDateButton(context, true, _from, true),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text('-', style: TextStyle(color: AppColors.textMuted)),
+                  ),
+                  _buildDateButton(context, false, _to, true),
+                ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-            child: const Text('Apply'),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => widget.onApply(_from, _to),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text('تطبيق'),
+                ),
+              ),
+            ],
+          )
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildDateButton(context, true, _from, false),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text('-', style: TextStyle(color: AppColors.textMuted)),
+              ),
+              _buildDateButton(context, false, _to, false),
+              const SizedBox(width: 16),
+              ElevatedButton(
+                onPressed: () => widget.onApply(_from, _to),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                child: const Text('Apply'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
-  Widget _buildDateButton(BuildContext context, bool isFrom, DateTime date) {
+  Widget _buildDateButton(BuildContext context, bool isFrom, DateTime date, bool isVerySmall) {
     return InkWell(
       onTap: () => _selectDate(context, isFrom),
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: isVerySmall ? 6 : 12, vertical: 8),
         decoration: BoxDecoration(
           border: Border.all(color: AppColors.glassBorder),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today, size: 16, color: AppColors.textMuted),
-            const SizedBox(width: 8),
+            Icon(Icons.calendar_today, size: isVerySmall ? 12 : 16, color: AppColors.textMuted),
+            SizedBox(width: isVerySmall ? 4 : 8),
             Text(
-              DateFormat('dd MMM yyyy').format(date),
-              style: const TextStyle(color: AppColors.textMain, fontSize: 14),
+              DateFormat(isVerySmall ? 'dd/MM/yy' : 'dd MMM yyyy').format(date),
+              style: TextStyle(color: AppColors.textMain, fontSize: isVerySmall ? 12 : 14),
             ),
           ],
         ),

@@ -56,14 +56,14 @@ class AdminHotelBookingCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildInfoColumn('Customer', booking.customer, Icons.person_outline),
+              _buildInfoColumn('العميل', booking.customer, Icons.person_outline),
               _buildInfoColumn(
-                'Check-in',
+                'دخول',
                 DateFormat('MMM dd, yyyy').format(booking.checkIn),
                 Icons.calendar_today_outlined,
               ),
               _buildInfoColumn(
-                'Price',
+                'السعر',
                 '\$${booking.price.toStringAsFixed(0)}',
                 Icons.attach_money,
                 isPrice: true,
@@ -82,15 +82,15 @@ class AdminHotelBookingCard extends StatelessWidget {
     switch (status.toLowerCase()) {
       case 'confirmed':
         color = AppColors.success;
-        label = 'Confirmed';
+        label = 'مؤكد';
         break;
       case 'pending':
         color = AppColors.warning;
-        label = 'Pending';
+        label = 'قيد الانتظار';
         break;
       case 'cancelled':
         color = Colors.redAccent;
-        label = 'Cancelled';
+        label = 'ملغى';
         break;
       default:
         color = AppColors.textMuted;

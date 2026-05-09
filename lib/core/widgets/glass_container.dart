@@ -7,6 +7,7 @@ class GlassContainer extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final double borderRadius;
+  final BorderRadiusGeometry? borderRadiusGeometry;
   final double? width;
   final double? height;
   final bool animateHover;
@@ -18,6 +19,7 @@ class GlassContainer extends StatelessWidget {
     this.padding,
     this.margin,
     this.borderRadius = 16.0,
+    this.borderRadiusGeometry,
     this.width,
     this.height,
     this.animateHover = false,
@@ -26,11 +28,13 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveRadius = borderRadiusGeometry ?? BorderRadius.circular(borderRadius);
+
     if (animateHover) {
       return _HoverGlassContainer(
         padding: padding,
         margin: margin,
-        borderRadius: borderRadius,
+        borderRadius: effectiveRadius,
         width: width,
         height: height,
         gradient: gradient,
@@ -43,7 +47,7 @@ class GlassContainer extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(borderRadius),
+        borderRadius: effectiveRadius,
         boxShadow: const [
           BoxShadow(
             color: Colors.black12,
@@ -53,7 +57,7 @@ class GlassContainer extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
+        borderRadius: effectiveRadius,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
           child: Container(
@@ -61,7 +65,7 @@ class GlassContainer extends StatelessWidget {
             decoration: BoxDecoration(
               color: gradient == null ? AppColors.glassBackground : null,
               gradient: gradient,
-              borderRadius: BorderRadius.circular(borderRadius),
+              borderRadius: effectiveRadius,
               border: Border.all(color: AppColors.glassBorder, width: 1.0),
             ),
             child: child,
@@ -76,7 +80,7 @@ class _HoverGlassContainer extends StatefulWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
-  final double borderRadius;
+  final BorderRadiusGeometry borderRadius;
   final double? width;
   final double? height;
   final Gradient? gradient;
@@ -111,7 +115,7 @@ class _HoverGlassContainerState extends State<_HoverGlassContainer> {
         width: widget.width,
         height: widget.height,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(widget.borderRadius),
+          borderRadius: widget.borderRadius,
           boxShadow: [
             BoxShadow(
               color: _isHovered
@@ -125,7 +129,7 @@ class _HoverGlassContainerState extends State<_HoverGlassContainer> {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(widget.borderRadius),
+          borderRadius: widget.borderRadius,
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
             child: AnimatedContainer(
@@ -138,7 +142,7 @@ class _HoverGlassContainerState extends State<_HoverGlassContainer> {
                           : AppColors.glassBackground)
                     : null,
                 gradient: widget.gradient,
-                borderRadius: BorderRadius.circular(widget.borderRadius),
+                borderRadius: widget.borderRadius,
                 border: Border.all(
                   color: _isHovered
                       ? (widget.gradient != null

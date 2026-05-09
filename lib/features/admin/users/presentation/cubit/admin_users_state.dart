@@ -13,12 +13,16 @@ class AdminUsersInitial extends AdminUsersState {}
 class AdminUsersLoading extends AdminUsersState {}
 
 class AdminUsersLoaded extends AdminUsersState {
-  final AdminUsersEntity data;
+  final List<UserEntity> users;
+  final PaginationEntity pagination;
 
-  const AdminUsersLoaded(this.data);
+  const AdminUsersLoaded({
+    required this.users,
+    required this.pagination,
+  });
 
   @override
-  List<Object?> get props => [data];
+  List<Object?> get props => [users, pagination];
 }
 
 class AdminUsersError extends AdminUsersState {
