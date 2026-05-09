@@ -1,0 +1,3691 @@
+
+window.onload = function() {
+  // Build a system
+  var url = window.location.search.match(/url=([^&]+)/);
+  if (url && url.length > 1) {
+    url = decodeURIComponent(url[1]);
+  } else {
+    url = window.location.origin;
+  }
+  var options = {
+  "swaggerDoc": {
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Travel Agency API",
+      "version": "1.0.0",
+      "description": "Backend API documentation for travel agency project"
+    },
+    "servers": [
+      {
+        "url": "/",
+        "description": "Same host as this page (recommended for production)"
+      }
+    ],
+    "tags": [
+      {
+        "name": "Auth",
+        "description": "Authentication and identity"
+      },
+      {
+        "name": "Dashboards - Admin",
+        "description": "Admin dashboard endpoints"
+      },
+      {
+        "name": "Dashboards - B2B",
+        "description": "B2B dashboard endpoints"
+      },
+      {
+        "name": "Dashboards - B2C",
+        "description": "B2C dashboard endpoints"
+      },
+      {
+        "name": "Dashboards - Me",
+        "description": "Current user dashboard endpoint"
+      },
+      {
+        "name": "Bookings - Flights",
+        "description": "Flights bookings create/list/update/delete"
+      },
+      {
+        "name": "Bookings - Hotels",
+        "description": "Hotels bookings create/list/update/delete"
+      },
+      {
+        "name": "Bookings - Cars",
+        "description": "Cars bookings create/list/update/delete"
+      },
+      {
+        "name": "Bookings - Lifecycle",
+        "description": "Confirm/cancel/refund booking actions"
+      },
+      {
+        "name": "Bookings - My",
+        "description": "Current user bookings"
+      },
+      {
+        "name": "Users",
+        "description": "Users management endpoints"
+      },
+      {
+        "name": "Availability",
+        "description": "Availability checks by date range"
+      },
+      {
+        "name": "Admin - Activity Logs",
+        "description": "Admin activity and audit logs"
+      },
+      {
+        "name": "Admin - B2B Config",
+        "description": "Admin settings for B2B dashboard sections"
+      },
+      {
+        "name": "Admin - B2C Config",
+        "description": "Admin settings for B2C dashboard sections"
+      }
+    ],
+    "components": {
+      "securitySchemes": {
+        "bearerAuth": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
+      },
+      "schemas": {
+        "ErrorResponse": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean",
+              "example": false
+            },
+            "code": {
+              "type": "string",
+              "example": "VALIDATION_ERROR"
+            },
+            "message": {
+              "type": "string",
+              "example": "Request validation failed."
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "type": "string",
+                    "example": "email"
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "email is required."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "AuthUser": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "example": "u-admin-1"
+            },
+            "name": {
+              "type": "string",
+              "example": "Ahmed Almasry"
+            },
+            "role": {
+              "type": "string",
+              "example": "admin"
+            },
+            "email": {
+              "type": "string",
+              "example": "admin@travel.com"
+            },
+            "status": {
+              "type": "string",
+              "example": "active"
+            }
+          }
+        },
+        "LoginRequest": {
+          "type": "object",
+          "required": [
+            "email",
+            "password"
+          ],
+          "properties": {
+            "email": {
+              "type": "string",
+              "example": "admin@travel.com"
+            },
+            "password": {
+              "type": "string",
+              "example": "Admin@123"
+            }
+          }
+        },
+        "LoginData": {
+          "type": "object",
+          "properties": {
+            "accessToken": {
+              "type": "string",
+              "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "tokenType": {
+              "type": "string",
+              "example": "Bearer"
+            },
+            "user": {
+              "$ref": "#/components/schemas/AuthUser"
+            }
+          }
+        },
+        "DateRangeFromTo": {
+          "type": "object",
+          "properties": {
+            "from": {
+              "type": "string",
+              "format": "date",
+              "example": "2025-05-01"
+            },
+            "to": {
+              "type": "string",
+              "format": "date",
+              "example": "2025-06-30"
+            }
+          }
+        },
+        "DashboardResponseEnvelope": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean",
+              "example": true
+            },
+            "message": {
+              "type": "string",
+              "example": "Admin overview fetched successfully."
+            },
+            "data": {
+              "type": "object"
+            }
+          }
+        },
+        "AdminOverviewData": {
+          "type": "object",
+          "properties": {
+            "greeting": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "example": "مرحبا، أحمد"
+                },
+                "subtitle": {
+                  "type": "string",
+                  "example": "هذا هو ملخص أداء وكالة السفر اليوم"
+                }
+              }
+            },
+            "kpis": {
+              "type": "object"
+            },
+            "recentFlightBookings": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "quickActions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "dateRange": {
+              "$ref": "#/components/schemas/DateRangeFromTo"
+            }
+          }
+        },
+        "AdminFlightsData": {
+          "type": "object",
+          "properties": {
+            "kpis": {
+              "type": "object"
+            },
+            "filters": {
+              "type": "object"
+            },
+            "recentBookings": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "dateRange": {
+              "$ref": "#/components/schemas/DateRangeFromTo"
+            }
+          }
+        },
+        "AdminHotelsData": {
+          "type": "object",
+          "properties": {
+            "kpis": {
+              "type": "object"
+            },
+            "filters": {
+              "type": "object"
+            },
+            "recentBookings": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "dateRange": {
+              "$ref": "#/components/schemas/DateRangeFromTo"
+            }
+          }
+        },
+        "AdminCarsData": {
+          "type": "object",
+          "properties": {
+            "kpis": {
+              "type": "object"
+            },
+            "filters": {
+              "type": "object"
+            },
+            "activeBookings": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "dateRange": {
+              "$ref": "#/components/schemas/DateRangeFromTo"
+            }
+          }
+        },
+        "AdminUsersData": {
+          "type": "object",
+          "properties": {
+            "kpis": {
+              "type": "object"
+            },
+            "list": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "AdminB2bData": {
+          "type": "object",
+          "properties": {
+            "kpis": {
+              "type": "object"
+            },
+            "agencyDistribution": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "topAgencies": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "dateRange": {
+              "$ref": "#/components/schemas/DateRangeFromTo"
+            }
+          }
+        },
+        "AdminB2cData": {
+          "type": "object",
+          "properties": {
+            "kpis": {
+              "type": "object"
+            },
+            "customerDistribution": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "growthLast6Months": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "dateRange": {
+              "$ref": "#/components/schemas/DateRangeFromTo"
+            }
+          }
+        },
+        "B2bOverviewData": {
+          "type": "object",
+          "properties": {
+            "kpis": {
+              "type": "object"
+            },
+            "agencyDistribution": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "topAgencies": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "accessibleModules": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "dateRange": {
+              "$ref": "#/components/schemas/DateRangeFromTo"
+            }
+          }
+        },
+        "B2cOverviewData": {
+          "type": "object",
+          "properties": {
+            "kpis": {
+              "type": "object"
+            },
+            "customerDistribution": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "growthLast6Months": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "accessibleModules": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "dateRange": {
+              "$ref": "#/components/schemas/DateRangeFromTo"
+            }
+          }
+        },
+        "MeOverviewData": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "type": "string",
+              "example": "admin"
+            },
+            "dashboard": {
+              "type": "object"
+            }
+          }
+        },
+        "UserItem": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "example": "u-admin-1"
+            },
+            "name": {
+              "type": "string",
+              "example": "Ahmed Almasry"
+            },
+            "email": {
+              "type": "string",
+              "example": "admin@travel.com"
+            },
+            "role": {
+              "type": "string",
+              "example": "admin"
+            },
+            "status": {
+              "type": "string",
+              "example": "active"
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "UsersListData": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/UserItem"
+              }
+            },
+            "pagination": {
+              "type": "object"
+            },
+            "filters": {
+              "type": "object"
+            },
+            "sorting": {
+              "type": "object"
+            }
+          }
+        },
+        "UserCreateRequest": {
+          "type": "object",
+          "required": [
+            "name",
+            "email",
+            "password",
+            "role"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "example": "New User"
+            },
+            "email": {
+              "type": "string",
+              "example": "new@travel.com"
+            },
+            "password": {
+              "type": "string",
+              "example": "Pass@123"
+            },
+            "role": {
+              "type": "string",
+              "example": "b2c"
+            },
+            "status": {
+              "type": "string",
+              "example": "active"
+            }
+          }
+        },
+        "UserUpdateRequest": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "UserStatusRequest": {
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "inactive"
+            }
+          }
+        },
+        "BookingItem": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "example": "FL-10244"
+            },
+            "status": {
+              "type": "string",
+              "example": "confirmed"
+            },
+            "price": {
+              "type": "number",
+              "example": 320
+            }
+          }
+        },
+        "BookingsListData": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/BookingItem"
+              }
+            },
+            "pagination": {
+              "type": "object"
+            },
+            "filters": {
+              "type": "object"
+            },
+            "sorting": {
+              "type": "object"
+            }
+          }
+        },
+        "FlightCreateRequest": {
+          "type": "object",
+          "required": [
+            "id",
+            "customer",
+            "route",
+            "date",
+            "price",
+            "status"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "example": "FL-20001"
+            },
+            "customer": {
+              "type": "string",
+              "example": "محمد علي"
+            },
+            "route": {
+              "type": "string",
+              "example": "القاهرة - دبي"
+            },
+            "date": {
+              "type": "string",
+              "format": "date",
+              "example": "2026-08-10"
+            },
+            "price": {
+              "type": "number",
+              "example": 450
+            },
+            "status": {
+              "type": "string",
+              "example": "confirmed"
+            }
+          },
+          "description": "userId is automatically set from the authenticated user token."
+        },
+        "HotelCreateRequest": {
+          "type": "object",
+          "required": [
+            "id",
+            "hotel",
+            "city",
+            "checkIn",
+            "checkOut",
+            "guests",
+            "price",
+            "status"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "example": "H-30001"
+            },
+            "hotel": {
+              "type": "string",
+              "example": "فندق النخبة"
+            },
+            "city": {
+              "type": "string",
+              "example": "دبي"
+            },
+            "checkIn": {
+              "type": "string",
+              "format": "date",
+              "example": "2026-08-10"
+            },
+            "checkOut": {
+              "type": "string",
+              "format": "date",
+              "example": "2026-08-15"
+            },
+            "guests": {
+              "type": "string",
+              "example": "شخصان - جناح"
+            },
+            "price": {
+              "type": "number",
+              "example": 950
+            },
+            "status": {
+              "type": "string",
+              "example": "pending"
+            }
+          }
+        },
+        "CarCreateRequest": {
+          "type": "object",
+          "required": [
+            "id",
+            "car",
+            "fromCity",
+            "toCity",
+            "pickupDate",
+            "returnDate",
+            "price",
+            "status"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "example": "C-40001"
+            },
+            "car": {
+              "type": "string",
+              "example": "Mercedes E-Class"
+            },
+            "customer": {
+              "type": "string",
+              "example": "محمد علي",
+              "description": "Optional, defaults to user email prefix"
+            },
+            "fromCity": {
+              "type": "string",
+              "example": "دبي"
+            },
+            "toCity": {
+              "type": "string",
+              "example": "أبوظبي"
+            },
+            "pickupDate": {
+              "type": "string",
+              "format": "date",
+              "example": "2026-08-10"
+            },
+            "returnDate": {
+              "type": "string",
+              "format": "date",
+              "example": "2026-08-14"
+            },
+            "price": {
+              "type": "number",
+              "example": 320
+            },
+            "status": {
+              "type": "string",
+              "example": "confirmed"
+            }
+          },
+          "description": "userId is automatically set from the authenticated user token."
+        },
+        "AvailabilityData": {
+          "type": "object",
+          "properties": {
+            "booked": {
+              "type": "number",
+              "example": 120
+            },
+            "capacity": {
+              "type": "number",
+              "example": 5000
+            },
+            "available": {
+              "type": "number",
+              "example": 4880
+            },
+            "hasAvailability": {
+              "type": "boolean",
+              "example": true
+            }
+          }
+        },
+        "ActivityLogItem": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "actorId": {
+              "type": "string"
+            },
+            "actorRole": {
+              "type": "string"
+            },
+            "action": {
+              "type": "string"
+            },
+            "entity": {
+              "type": "string"
+            },
+            "entityId": {
+              "type": "string",
+              "nullable": true
+            },
+            "details": {
+              "type": "object",
+              "nullable": true
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "ActivityLogsData": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ActivityLogItem"
+              }
+            },
+            "pagination": {
+              "type": "object"
+            },
+            "filters": {
+              "type": "object"
+            }
+          }
+        },
+        "AdminConfigItem": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "example": 1
+            },
+            "type": {
+              "type": "string",
+              "example": "شركات سياحة"
+            },
+            "name": {
+              "type": "string",
+              "example": "السفر العربية"
+            },
+            "month": {
+              "type": "string",
+              "example": "يوليو"
+            },
+            "value": {
+              "type": "number",
+              "example": 60
+            },
+            "sales": {
+              "type": "number",
+              "example": 45
+            }
+          }
+        },
+        "B2bDistributionCreateRequest": {
+          "type": "object",
+          "required": [
+            "type",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "example": "شركات سياحة"
+            },
+            "value": {
+              "type": "number",
+              "example": 60
+            }
+          }
+        },
+        "B2bTopAgenciesCreateRequest": {
+          "type": "object",
+          "required": [
+            "name",
+            "sales"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "example": "السفر العربية"
+            },
+            "sales": {
+              "type": "number",
+              "example": 45
+            }
+          }
+        },
+        "B2cDistributionCreateRequest": {
+          "type": "object",
+          "required": [
+            "type",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "example": "عملاء عاديون"
+            },
+            "value": {
+              "type": "number",
+              "example": 45
+            }
+          }
+        },
+        "B2cGrowthCreateRequest": {
+          "type": "object",
+          "required": [
+            "month",
+            "value"
+          ],
+          "properties": {
+            "month": {
+              "type": "string",
+              "example": "يوليو"
+            },
+            "value": {
+              "type": "number",
+              "example": 33
+            }
+          }
+        },
+        "SuccessAuthResponse": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean",
+              "example": true
+            },
+            "message": {
+              "type": "string",
+              "example": "Login successful."
+            },
+            "data": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "security": [
+      {
+        "bearerAuth": []
+      }
+    ],
+    "paths": {
+      "/api/auth/login": {
+        "post": {
+          "tags": [
+            "Auth"
+          ],
+          "summary": "Login and receive tokens",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Login successful",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/SuccessAuthResponse"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/LoginData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Invalid credentials",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/auth/logout": {
+        "post": {
+          "tags": [
+            "Auth"
+          ],
+          "summary": "Logout",
+          "responses": {
+            "200": {
+              "description": "Logged out",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/SuccessAuthResponse"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "type": "null",
+                            "example": null
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/auth/me": {
+        "get": {
+          "tags": [
+            "Auth"
+          ],
+          "summary": "Get current authenticated user",
+          "responses": {
+            "200": {
+              "description": "Current user returned",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/SuccessAuthResponse"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/AuthUser"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Missing or invalid token",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "User not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/dashboard/me": {
+        "get": {
+          "tags": [
+            "Dashboards - Me"
+          ],
+          "summary": "Get dashboard for current role",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "from",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              },
+              "description": "Start date filter"
+            },
+            {
+              "in": "query",
+              "name": "to",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              },
+              "description": "End date filter"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Current role dashboard fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/DashboardResponseEnvelope"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/MeOverviewData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid date range",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/dashboard/admin/overview": {
+        "get": {
+          "tags": [
+            "Dashboards - Admin"
+          ],
+          "summary": "Get admin overview dashboard",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "from",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              },
+              "description": "Start date filter"
+            },
+            {
+              "in": "query",
+              "name": "to",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              },
+              "description": "End date filter"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Admin overview fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/DashboardResponseEnvelope"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/AdminOverviewData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid date range",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Forbidden role",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/dashboard/admin/flights": {
+        "get": {
+          "tags": [
+            "Dashboards - Admin"
+          ],
+          "summary": "Get admin flights dashboard",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "from",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "in": "query",
+              "name": "to",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Admin flights dashboard fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/DashboardResponseEnvelope"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/AdminFlightsData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid date range",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/dashboard/admin/hotels": {
+        "get": {
+          "tags": [
+            "Dashboards - Admin"
+          ],
+          "summary": "Get admin hotels dashboard",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "from",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "in": "query",
+              "name": "to",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Admin hotels dashboard fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/DashboardResponseEnvelope"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/AdminHotelsData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid date range",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/dashboard/admin/cars": {
+        "get": {
+          "tags": [
+            "Dashboards - Admin"
+          ],
+          "summary": "Get admin cars dashboard",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "from",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "in": "query",
+              "name": "to",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Admin cars dashboard fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/DashboardResponseEnvelope"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/AdminCarsData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid date range",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/dashboard/admin/users": {
+        "get": {
+          "tags": [
+            "Dashboards - Admin"
+          ],
+          "summary": "Get admin users dashboard",
+          "responses": {
+            "200": {
+              "description": "Admin users dashboard fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/DashboardResponseEnvelope"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/AdminUsersData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/dashboard/admin/b2b": {
+        "get": {
+          "tags": [
+            "Dashboards - Admin"
+          ],
+          "summary": "Get admin B2B dashboard",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "from",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "in": "query",
+              "name": "to",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Admin B2B dashboard fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/DashboardResponseEnvelope"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/AdminB2bData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid date range",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/dashboard/admin/b2c": {
+        "get": {
+          "tags": [
+            "Dashboards - Admin"
+          ],
+          "summary": "Get admin B2C dashboard",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "from",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "in": "query",
+              "name": "to",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Admin B2C dashboard fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/DashboardResponseEnvelope"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/AdminB2cData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid date range",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/dashboard/b2b/overview": {
+        "get": {
+          "tags": [
+            "Dashboards - B2B"
+          ],
+          "summary": "Get B2B overview dashboard",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "from",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              },
+              "description": "Start date filter"
+            },
+            {
+              "in": "query",
+              "name": "to",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              },
+              "description": "End date filter"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "B2B dashboard fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/DashboardResponseEnvelope"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/B2bOverviewData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid date range",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Forbidden role",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/dashboard/b2c/overview": {
+        "get": {
+          "tags": [
+            "Dashboards - B2C"
+          ],
+          "summary": "Get B2C overview dashboard",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "from",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              },
+              "description": "Start date filter"
+            },
+            {
+              "in": "query",
+              "name": "to",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              },
+              "description": "End date filter"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "B2C dashboard fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/DashboardResponseEnvelope"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/B2cOverviewData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid date range",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Forbidden role",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/bookings/flights": {
+        "get": {
+          "tags": [
+            "Bookings - Flights"
+          ],
+          "summary": "List flight bookings (admin: all, b2b/b2c: own only)",
+          "description": "Admin users see all flight bookings. B2B/B2C users see only bookings they created.",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "q",
+              "required": false,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Search query"
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "required": false,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Filter by status"
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 10
+              }
+            },
+            {
+              "in": "query",
+              "name": "sortBy",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "sortOrder",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Flights list",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/SuccessAuthResponse"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/BookingsListData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "post": {
+          "tags": [
+            "Bookings - Flights"
+          ],
+          "summary": "Create flight booking (admin, b2b, b2c)",
+          "description": "All authenticated users can create flight bookings. userId is auto-set from token.",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightCreateRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Flight booking created",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Duplicate booking id",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/bookings/hotels": {
+        "get": {
+          "tags": [
+            "Bookings - Hotels"
+          ],
+          "summary": "List hotel bookings (admin: all, b2b/b2c: own only)",
+          "description": "Admin users see all hotel bookings. B2B/B2C users see only bookings they created.",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "q",
+              "required": false,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Search query"
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "required": false,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Filter by status"
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 10
+              }
+            },
+            {
+              "in": "query",
+              "name": "sortBy",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "sortOrder",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Hotels list",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/SuccessAuthResponse"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/BookingsListData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "post": {
+          "tags": [
+            "Bookings - Hotels"
+          ],
+          "summary": "Create hotel booking (admin, b2b, b2c)",
+          "description": "All authenticated users can create hotel bookings. userId is auto-set from token.",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HotelCreateRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Hotel booking created",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Duplicate booking id",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/bookings/cars": {
+        "get": {
+          "tags": [
+            "Bookings - Cars"
+          ],
+          "summary": "List car bookings (admin: all, b2b/b2c: own only)",
+          "description": "Admin users see all car bookings. B2B/B2C users see only bookings they created.",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "q",
+              "required": false,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Search query"
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "required": false,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Filter by status"
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 10
+              }
+            },
+            {
+              "in": "query",
+              "name": "sortBy",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "sortOrder",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Cars list",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/SuccessAuthResponse"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/BookingsListData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "post": {
+          "tags": [
+            "Bookings - Cars"
+          ],
+          "summary": "Create car booking (admin, b2b, b2c)",
+          "description": "All authenticated users can create car bookings. userId is auto-set from token.",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CarCreateRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Car booking created",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Duplicate booking id",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/bookings/my": {
+        "get": {
+          "tags": [
+            "Bookings - My"
+          ],
+          "summary": "List all current user bookings (flights + hotels + cars)",
+          "description": "Returns all bookings for the authenticated user grouped by type. Admin sees latest 10 of each. B2B/B2C see all their bookings filtered by userId.",
+          "responses": {
+            "200": {
+              "description": "My bookings fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/SuccessAuthResponse"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "type": "object",
+                            "properties": {
+                              "flights": {
+                                "type": "array",
+                                "items": {
+                                  "$ref": "#/components/schemas/BookingItem"
+                                }
+                              },
+                              "hotels": {
+                                "type": "array",
+                                "items": {
+                                  "$ref": "#/components/schemas/BookingItem"
+                                }
+                              },
+                              "cars": {
+                                "type": "array",
+                                "items": {
+                                  "$ref": "#/components/schemas/BookingItem"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/bookings/my/{type}/{id}": {
+        "get": {
+          "tags": [
+            "Bookings - My"
+          ],
+          "summary": "Get current user booking by type and id",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "type",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "My booking fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/SuccessAuthResponse"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/BookingItem"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid booking type",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Booking not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/bookings/{type}/{id}/confirm": {
+        "post": {
+          "tags": [
+            "Bookings - Lifecycle"
+          ],
+          "summary": "Confirm booking",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "type",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Booking confirmed",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid booking type",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Booking not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/bookings/{type}/{id}/cancel": {
+        "post": {
+          "tags": [
+            "Bookings - Lifecycle"
+          ],
+          "summary": "Cancel booking",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "type",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Booking cancelled",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid booking type",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Booking not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/bookings/{type}/{id}/refund": {
+        "post": {
+          "tags": [
+            "Bookings - Lifecycle"
+          ],
+          "summary": "Refund booking",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "type",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Booking refunded",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid booking type or refund failed",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Booking not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Invalid booking state (not cancelled)",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/users": {
+        "get": {
+          "tags": [
+            "Users"
+          ],
+          "summary": "List users",
+          "responses": {
+            "200": {
+              "description": "Users list fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/SuccessAuthResponse"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/UsersListData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "post": {
+          "tags": [
+            "Users"
+          ],
+          "summary": "Create user",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserCreateRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "User created",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Duplicate email",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/users/{id}": {
+        "put": {
+          "tags": [
+            "Users"
+          ],
+          "summary": "Update user",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserUpdateRequest"
+                }
+              }
+            }
+          },
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User updated",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "User not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "delete": {
+          "tags": [
+            "Users"
+          ],
+          "summary": "Delete user",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User deleted",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "User not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/users/{id}/status": {
+        "patch": {
+          "tags": [
+            "Users"
+          ],
+          "summary": "Update user status",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserStatusRequest"
+                }
+              }
+            }
+          },
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User status updated",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "User not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/availability/flights": {
+        "get": {
+          "tags": [
+            "Availability"
+          ],
+          "summary": "Flights availability by date range",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "from",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "in": "query",
+              "name": "to",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Flights availability fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/SuccessAuthResponse"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/AvailabilityData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/availability/hotels": {
+        "get": {
+          "tags": [
+            "Availability"
+          ],
+          "summary": "Hotels availability by date range",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "from",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "in": "query",
+              "name": "to",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Hotels availability fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/SuccessAuthResponse"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/AvailabilityData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/availability/cars": {
+        "get": {
+          "tags": [
+            "Availability"
+          ],
+          "summary": "Cars availability by date range",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "from",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "in": "query",
+              "name": "to",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Cars availability fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/SuccessAuthResponse"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/AvailabilityData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/activity-logs": {
+        "get": {
+          "tags": [
+            "Admin - Activity Logs"
+          ],
+          "summary": "Admin activity logs",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "page",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "action",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "entity",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "actorId",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "from",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "in": "query",
+              "name": "to",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Activity logs fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/SuccessAuthResponse"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "$ref": "#/components/schemas/ActivityLogsData"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/b2b/distribution/{id}": {
+        "put": {
+          "tags": [
+            "Admin - B2B Config"
+          ],
+          "summary": "Update B2B distribution item",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B2bDistributionCreateRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Updated successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Item not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "delete": {
+          "tags": [
+            "Admin - B2B Config"
+          ],
+          "summary": "Delete B2B distribution item",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Deleted successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Item not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/b2b/distribution": {
+        "post": {
+          "tags": [
+            "Admin - B2B Config"
+          ],
+          "summary": "Create B2B distribution item",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B2bDistributionCreateRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/b2b/top-agencies/{id}": {
+        "put": {
+          "tags": [
+            "Admin - B2B Config"
+          ],
+          "summary": "Update B2B top agency item",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B2bTopAgenciesCreateRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Updated successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Item not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "delete": {
+          "tags": [
+            "Admin - B2B Config"
+          ],
+          "summary": "Delete B2B top agency item",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Deleted successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Item not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/b2b/top-agencies": {
+        "post": {
+          "tags": [
+            "Admin - B2B Config"
+          ],
+          "summary": "Create B2B top agency item",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B2bTopAgenciesCreateRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/b2c/distribution/{id}": {
+        "put": {
+          "tags": [
+            "Admin - B2C Config"
+          ],
+          "summary": "Update B2C distribution item",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B2cDistributionCreateRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Updated successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Item not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "delete": {
+          "tags": [
+            "Admin - B2C Config"
+          ],
+          "summary": "Delete B2C distribution item",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Deleted successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Item not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/b2c/distribution": {
+        "post": {
+          "tags": [
+            "Admin - B2C Config"
+          ],
+          "summary": "Create B2C distribution item",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B2cDistributionCreateRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/b2c/growth/{id}": {
+        "put": {
+          "tags": [
+            "Admin - B2C Config"
+          ],
+          "summary": "Update B2C growth item",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B2cGrowthCreateRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Updated successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Item not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "delete": {
+          "tags": [
+            "Admin - B2C Config"
+          ],
+          "summary": "Delete B2C growth item",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Deleted successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Item not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/b2c/growth": {
+        "post": {
+          "tags": [
+            "Admin - B2C Config"
+          ],
+          "summary": "Create B2C growth item",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B2cGrowthCreateRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessAuthResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "customOptions": {
+    "tagsSorter": (a, b) => {
+        const tagOrder = [
+          "Auth",
+          "Dashboards - Admin",
+          "Dashboards - B2B",
+          "Dashboards - B2C",
+          "Dashboards - Me",
+          "Bookings - Flights",
+          "Bookings - Hotels",
+          "Bookings - Cars",
+          "Bookings - Lifecycle",
+          "Bookings - My",
+          "Users",
+          "Availability",
+          "Admin - Activity Logs",
+          "Admin - B2B Config",
+          "Admin - B2C Config",
+        ];
+        const ai = tagOrder.indexOf(a);
+        const bi = tagOrder.indexOf(b);
+        const aIndex = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
+        const bIndex = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
+        return aIndex - bIndex;
+      },
+    "operationsSorter": (a, b) => {
+        const pathOrder = [
+          "/api/auth/login",
+          "/api/auth/me",
+          "/api/auth/logout",
+          "/api/dashboard/admin/overview",
+          "/api/dashboard/admin/flights",
+          "/api/dashboard/admin/hotels",
+          "/api/dashboard/admin/cars",
+          "/api/dashboard/admin/users",
+          "/api/dashboard/admin/b2b",
+          "/api/dashboard/admin/b2c",
+          "/api/dashboard/b2b/overview",
+          "/api/dashboard/b2c/overview",
+          "/api/dashboard/me",
+          "/api/bookings/flights",
+          "/api/bookings/hotels",
+          "/api/bookings/cars",
+          "/api/bookings/{type}/{id}/confirm",
+          "/api/bookings/{type}/{id}/cancel",
+          "/api/bookings/{type}/{id}/refund",
+          "/api/bookings/my",
+          "/api/bookings/my/{type}/{id}",
+          "/api/users",
+          "/api/users/{id}",
+          "/api/users/{id}/status",
+          "/api/availability/flights",
+          "/api/availability/hotels",
+          "/api/availability/cars",
+          "/api/admin/activity-logs",
+          "/api/admin/b2b/distribution",
+          "/api/admin/b2b/distribution/{id}",
+          "/api/admin/b2b/top-agencies",
+          "/api/admin/b2b/top-agencies/{id}",
+          "/api/admin/b2c/distribution",
+          "/api/admin/b2c/distribution/{id}",
+          "/api/admin/b2c/growth",
+          "/api/admin/b2c/growth/{id}",
+        ];
+        const methodOrder = { get: 1, post: 2, put: 3, patch: 4, delete: 5 };
+        const aPath = a.get("path");
+        const bPath = b.get("path");
+        const aMethod = a.get("method");
+        const bMethod = b.get("method");
+
+        const ai = pathOrder.indexOf(aPath);
+        const bi = pathOrder.indexOf(bPath);
+        const aPathIndex = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
+        const bPathIndex = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
+
+        if (aPathIndex !== bPathIndex) {
+          return aPathIndex - bPathIndex;
+        }
+
+        const aMethodIndex = methodOrder[aMethod] || 999;
+        const bMethodIndex = methodOrder[bMethod] || 999;
+        return aMethodIndex - bMethodIndex;
+      },
+    "docExpansion": "list"
+  }
+};
+  url = options.swaggerUrl || url
+  var urls = options.swaggerUrls
+  var customOptions = options.customOptions
+  var spec1 = options.swaggerDoc
+  var swaggerOptions = {
+    spec: spec1,
+    url: url,
+    urls: urls,
+    dom_id: '#swagger-ui',
+    deepLinking: true,
+    presets: [
+      SwaggerUIBundle.presets.apis,
+      SwaggerUIStandalonePreset
+    ],
+    plugins: [
+      SwaggerUIBundle.plugins.DownloadUrl
+    ],
+    layout: "StandaloneLayout"
+  }
+  for (var attrname in customOptions) {
+    swaggerOptions[attrname] = customOptions[attrname];
+  }
+  var ui = SwaggerUIBundle(swaggerOptions)
+
+  if (customOptions.oauth) {
+    ui.initOAuth(customOptions.oauth)
+  }
+
+  if (customOptions.preauthorizeApiKey) {
+    const key = customOptions.preauthorizeApiKey.authDefinitionKey;
+    const value = customOptions.preauthorizeApiKey.apiKeyValue;
+    if (!!key && !!value) {
+      const pid = setInterval(() => {
+        const authorized = ui.preauthorizeApiKey(key, value);
+        if(!!authorized) clearInterval(pid);
+      }, 500)
+
+    }
+  }
+
+  if (customOptions.authAction) {
+    ui.authActions.authorize(customOptions.authAction)
+  }
+
+  window.ui = ui
+}
