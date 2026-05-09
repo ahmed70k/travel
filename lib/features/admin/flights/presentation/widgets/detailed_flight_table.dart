@@ -19,7 +19,7 @@ class DetailedFlightTable extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.all(24.0),
             child: Text(
-              'Detailed Bookings Report',
+              'تقرير الحجوزات المفصل',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -38,37 +38,37 @@ class DetailedFlightTable extends StatelessWidget {
               columns: const [
                 DataColumn(
                   label: Text(
-                    '# Booking',
+                    'رقم الحجز',
                     style: TextStyle(color: AppColors.textMuted),
                   ),
                 ),
                 DataColumn(
                   label: Text(
-                    'Customer',
+                    'العميل',
                     style: TextStyle(color: AppColors.textMuted),
                   ),
                 ),
                 DataColumn(
                   label: Text(
-                    'Route',
+                    'المسار',
                     style: TextStyle(color: AppColors.textMuted),
                   ),
                 ),
                 DataColumn(
                   label: Text(
-                    'Departure',
+                    'المغادرة',
                     style: TextStyle(color: AppColors.textMuted),
                   ),
                 ),
                 DataColumn(
                   label: Text(
-                    'Price',
+                    'السعر',
                     style: TextStyle(color: AppColors.textMuted),
                   ),
                 ),
                 DataColumn(
                   label: Text(
-                    'Status',
+                    'الحالة',
                     style: TextStyle(color: AppColors.textMuted),
                   ),
                 ),
@@ -128,15 +128,15 @@ class DetailedFlightTable extends StatelessWidget {
     switch (status.toLowerCase()) {
       case 'confirmed':
         color = AppColors.success;
-        label = 'Confirmed';
+        label = 'مؤكد';
         break;
       case 'pending':
         color = AppColors.warning;
-        label = 'Pending';
+        label = 'قيد الانتظار';
         break;
       case 'cancelled':
         color = Colors.redAccent;
-        label = 'Cancelled';
+        label = 'ملغي';
         break;
       default:
         color = AppColors.textMuted;

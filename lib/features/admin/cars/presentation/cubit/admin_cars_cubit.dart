@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/usecases/get_admin_cars_usecase.dart';
+import '../../../../../core/error/failures.dart';
 import 'admin_cars_state.dart';
 
 class AdminCarsCubit extends Cubit<AdminCarsState> {
@@ -34,7 +35,7 @@ class AdminCarsCubit extends Cubit<AdminCarsState> {
     );
 
     result.fold(
-      (failure) => emit(AdminCarsError(failure.message)),
+      (Failure failure) => emit(AdminCarsError(failure.message)),
       (data) => emit(AdminCarsLoaded(data)),
     );
   }

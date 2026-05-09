@@ -27,7 +27,7 @@ class _AdminCarFiltersState extends State<AdminCarFilters> {
       children: [
         // Car Types
         const Text(
-          'Car Types',
+          'أنواع السيارات',
           style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
@@ -60,7 +60,7 @@ class _AdminCarFiltersState extends State<AdminCarFilters> {
 
         // Categories
         const Text(
-          'Categories',
+          'الفئات',
           style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),

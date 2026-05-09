@@ -6,10 +6,12 @@ import '../../../../../../../core/di/dependency_injection.dart';
 import '../../../../../../../core/theme/app_colors.dart';
 import '../../../../../../../core/widgets/glass_container.dart';
 import '../../../../../../../core/widgets/neon_text.dart';
+import '../../../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../../../auth/presentation/cubit/auth_state.dart';
 import '../../../../../auth/presentation/cubit/logout_cubit.dart';
 import '../../../../../auth/presentation/cubit/logout_state.dart';
 import '../../../../../auth/presentation/pages/login_page.dart';
-import '../../state/admin_providers.dart';
+import '../../state/sidebar_state.dart';
 
 class PremiumSidebar extends ConsumerWidget {
   const PremiumSidebar({super.key});
@@ -20,11 +22,13 @@ class PremiumSidebar extends ConsumerWidget {
       borderRadius: 0,
       width: 280, // w-80 mapped approx to 320, here 280 for better fit
       padding: const EdgeInsets.only(top: 0),
-      child: Column(
+      child: SafeArea(
+        bottom: false,
+        child: Column(
         children: [
           // Header Logo
           Container(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.only(top: 48, left: 24, right: 24, bottom: 24),
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: AppColors.glassBorder)),
             ),
@@ -94,20 +98,14 @@ class PremiumSidebar extends ConsumerWidget {
                 const SidebarItem(
                   title: 'حجوزات الطيران',
                   icon: Icons.flight,
-                  badge: '1.2k',
-                  badgeColor: AppColors.primary,
                 ),
                 const SidebarItem(
                   title: 'حجوزات الفنادق',
                   icon: Icons.hotel,
-                  badge: '892',
-                  badgeColor: AppColors.secondary,
                 ),
                 const SidebarItem(
                   title: 'السيارات والتأجير',
                   icon: Icons.directions_car,
-                  badge: '156',
-                  badgeColor: Colors.blue,
                 ),
 
                 const SizedBox(height: 24),
@@ -115,6 +113,9 @@ class PremiumSidebar extends ConsumerWidget {
                 const SidebarItem(title: 'جميع المستخدمين', icon: Icons.people),
                 const SidebarItem(title: 'الوكلاء B2B', icon: Icons.business),
                 const SidebarItem(title: 'العملاء B2C', icon: Icons.person),
+                const SizedBox(height: 24),
+                _buildSectionTitle('الحساب'),
+                const SidebarItem(title: 'الملف الشخصي', icon: Icons.person_outline),
               ],
             ),
           ),
@@ -130,50 +131,75 @@ class PremiumSidebar extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                Stack(
-                  children: [
-                    const CircleAvatar(
-                      backgroundColor: AppColors.primary,
-                      child: Text('أم', style: TextStyle(color: Colors.white)),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: AppColors.success,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.backgroundStart,
-                            width: 2,
+                Expanded(
+                  child: BlocBuilder<AuthCubit, AuthState>(
+                    builder: (context, state) {
+                      String name = 'جاري التحميل...';
+                      String email = '...';
+                      String initials = 'أم';
+
+                      if (state is Authenticated) {
+                        name = state.user.name;
+                        email = state.user.email;
+                        initials = name.length >= 2 ? name.substring(0, 2) : name;
+                      }
+
+                      return Row(
+                        children: [
+                          Stack(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: AppColors.primary,
+                                child: Text(initials,
+                                    style: const TextStyle(color: Colors.white)),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.success,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: AppColors.backgroundStart,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'أحمد المدير',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        'admin@travel.com',
-                        style: TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  email,
+                                  style: const TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 12,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
                 BlocProvider(
@@ -224,6 +250,7 @@ class PremiumSidebar extends ConsumerWidget {
           ),
         ],
       ),
+     ),
     );
   }
 

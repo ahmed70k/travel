@@ -27,7 +27,7 @@ class _AdminHotelFiltersState extends State<AdminHotelFilters> {
       children: [
         // Guests Count
         const Text(
-          'Guests Count',
+          'عدد الضيوف',
           style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
@@ -60,7 +60,7 @@ class _AdminHotelFiltersState extends State<AdminHotelFilters> {
 
         // Categories
         const Text(
-          'Categories',
+          'الفئات',
           style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),

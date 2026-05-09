@@ -1,22 +1,30 @@
 import 'package:dartz/dartz.dart';
-import 'package:travle/core/network/error_handler.dart';
+import '../../../../../core/error/failures.dart';
 import '../entities/admin_users_entity.dart';
 import '../repositories/admin_users_repository.dart';
 
 class GetAdminUsersUseCase {
   final AdminUsersRepository repository;
 
-  const GetAdminUsersUseCase(this.repository);
+  GetAdminUsersUseCase(this.repository);
 
-  Future<Either<Failure, AdminUsersEntity>> call({
+  Future<Either<Failure, UsersResponseDataEntity>> call({
+    int page = 1,
+    int limit = 10,
     String? query,
-    String? accountType,
+    String? role,
     String? status,
+    String? sortBy,
+    String? sortOrder,
   }) async {
     return await repository.getUsers(
+      page: page,
+      limit: limit,
       query: query,
-      accountType: accountType,
+      role: role,
       status: status,
+      sortBy: sortBy,
+      sortOrder: sortOrder,
     );
   }
 }

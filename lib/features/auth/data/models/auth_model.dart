@@ -27,12 +27,36 @@ class AuthModel extends AuthEntity {
     final String decoded = utf8.decode(base64Url.decode(payload));
     final Map<String, dynamic> payloadMap = jsonDecode(decoded);
 
+    // Robust role extraction
+    final dynamic roleData = payloadMap['role'] ??
+        payloadMap['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ??
+        'b2c';
+    String extractedRole = 'b2c';
+    if (roleData is List && roleData.isNotEmpty) {
+      extractedRole = roleData.first.toString();
+    } else {
+      extractedRole = roleData.toString();
+    }
+
     return AuthModel(
       user: UserModel(
-        id: payloadMap['sub']?.toString() ?? '',
-        email: payloadMap['email'] ?? '',
-        name: payloadMap['name'] ?? 'User',
-        role: payloadMap['role'] ?? 'b2c',
+        id: (payloadMap['sub'] ??
+                payloadMap['id'] ??
+                payloadMap[
+                    'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ??
+                '')
+            .toString(),
+        email: payloadMap['email'] ??
+            payloadMap[
+                'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ??
+            '',
+        name: payloadMap['name'] ??
+            payloadMap['fullName'] ??
+            payloadMap['unique_name'] ??
+            payloadMap[
+                'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] ??
+            'User',
+        role: extractedRole,
       ),
       accessToken: token,
       refreshToken: data['refreshToken'] ?? data['refresh_token'] ?? '',

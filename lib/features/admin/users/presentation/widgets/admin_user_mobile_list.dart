@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:travle/core/theme/app_colors.dart';
 import 'package:travle/core/widgets/glass_container.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/admin_users_entity.dart';
+import '../pages/edit_user_page.dart';
+import '../cubit/admin_users_cubit.dart';
 
 class AdminUserMobileList extends StatelessWidget {
   final List<UserEntity> users;
@@ -15,11 +18,11 @@ class AdminUserMobileList extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: users.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, index) => _buildUserCard(users[index]),
+      itemBuilder: (context, index) => _buildUserCard(users[index], context),
     );
   }
 
-  Widget _buildUserCard(UserEntity user) {
+  Widget _buildUserCard(UserEntity user, BuildContext context) {
     return GlassContainer(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -30,7 +33,7 @@ class AdminUserMobileList extends StatelessWidget {
                 radius: 20,
                 backgroundColor: AppColors.primary.withOpacity(0.1),
                 child: Text(
-                  user.name.substring(0, 1).toUpperCase(),
+                  user.name.isNotEmpty ? user.name.substring(0, 1).toUpperCase() : 'U',
                   style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -47,7 +50,7 @@ class AdminUserMobileList extends StatelessWidget {
                   ],
                 ),
               ),
-              _buildTypeBadge(user.accountType),
+              _buildTypeBadge(user.role),
             ],
           ),
           const SizedBox(height: 16),
@@ -56,19 +59,26 @@ class AdminUserMobileList extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Bookings', style: TextStyle(color: AppColors.textMuted, fontSize: 10)),
-                  Text(user.bookingsCount.toString(), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                ],
-              ),
               _buildStatusBadge(user.status),
-              IconButton(
-                icon: const Icon(Icons.arrow_forward_ios, color: AppColors.textMuted, size: 14),
-                onPressed: () {},
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent, size: 20),
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => EditUserPage(user: user)),
+                      );
+                      if (result == true && context.mounted) {
+                        context.read<AdminUsersCubit>().refresh();
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                    onPressed: () => _showDeleteConfirmation(context, user),
+                  ),
+                ],
               ),
             ],
           ),
@@ -77,12 +87,52 @@ class AdminUserMobileList extends StatelessWidget {
     );
   }
 
-  Widget _buildTypeBadge(String type) {
+  void _showDeleteConfirmation(BuildContext context, UserEntity user) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.backgroundEnd,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Colors.white10)),
+        title: const Text('تأكيد الحذف', style: TextStyle(color: Colors.white)),
+        content: Text('هل أنت متأكد من رغبتك في حذف المستخدم "${user.name}"؟ لا يمكن التراجع عن هذه العملية.', 
+          style: const TextStyle(color: AppColors.textMuted)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('إلغاء', style: TextStyle(color: AppColors.textMuted)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              context.read<AdminUsersCubit>().deleteUser(user.id);
+              Navigator.pop(dialogContext);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypeBadge(String role) {
     Color color;
-    switch (type.toUpperCase()) {
-      case 'ADMIN': color = Colors.orangeAccent; break;
-      case 'B2B': color = Colors.purpleAccent; break;
-      default: color = Colors.blueAccent;
+    String label;
+    switch (role.toLowerCase()) {
+      case 'admin':
+        color = Colors.redAccent;
+        label = 'مدير';
+        break;
+      case 'b2b':
+        color = Colors.blueAccent;
+        label = 'وكيل B2B';
+        break;
+      case 'b2c':
+        color = Colors.greenAccent;
+        label = 'عميل B2C';
+        break;
+      default:
+        color = Colors.grey;
+        label = role;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -90,13 +140,13 @@ class AdminUserMobileList extends StatelessWidget {
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(6),
       ),
-      child: Text(type, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold)),
+      child: Text(label, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold)),
     );
   }
 
   Widget _buildStatusBadge(String status) {
     final isActive = status.toLowerCase() == 'active';
-    final color = isActive ? AppColors.success : AppColors.textMuted;
+    final color = isActive ? AppColors.success : AppColors.error;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -104,7 +154,7 @@ class AdminUserMobileList extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        isActive ? 'Active' : 'Inactive',
+        isActive ? 'نشط' : 'غير نشط',
         style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
       ),
     );

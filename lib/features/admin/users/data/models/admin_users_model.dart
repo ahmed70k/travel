@@ -1,37 +1,18 @@
 import '../../domain/entities/admin_users_entity.dart';
 
-class AdminUsersModel extends AdminUsersEntity {
-  const AdminUsersModel({
-    required super.kpis,
-    required super.usersList,
+class UsersResponseModel extends UsersResponseDataEntity {
+  const UsersResponseModel({
+    required super.users,
+    required super.pagination,
   });
 
-  factory AdminUsersModel.fromJson(Map<String, dynamic> json) {
-    final data = json['data'] ?? json;
-    final kpisJson = data['kpis'] ?? {};
-    final usersJson = (data['usersList'] as List?) ?? [];
-
-    return AdminUsersModel(
-      kpis: UserKPIModel.fromJson(kpisJson),
-      usersList: usersJson.map((e) => UserModel.fromJson(e)).toList(),
-    );
-  }
-}
-
-class UserKPIModel extends UserKPIEntity {
-  const UserKPIModel({
-    required super.totalUsers,
-    required super.b2bAgencies,
-    required super.b2cCustomers,
-    required super.newThisMonth,
-  });
-
-  factory UserKPIModel.fromJson(Map<String, dynamic> json) {
-    return UserKPIModel(
-      totalUsers: json['totalUsers'] ?? 0,
-      b2bAgencies: json['b2bAgencies'] ?? 0,
-      b2cCustomers: json['b2cCustomers'] ?? 0,
-      newThisMonth: json['newThisMonth'] ?? 0,
+  factory UsersResponseModel.fromJson(Map<String, dynamic> json) {
+    final data = json['data'];
+    return UsersResponseModel(
+      users: (data['data'] as List)
+          .map((user) => UserModel.fromJson(user))
+          .toList(),
+      pagination: PaginationModel.fromJson(data['pagination']),
     );
   }
 }
@@ -40,22 +21,40 @@ class UserModel extends UserEntity {
   const UserModel({
     required super.id,
     required super.name,
-    required super.accountType,
     required super.email,
-    required super.registeredAt,
-    required super.bookingsCount,
+    required super.role,
     required super.status,
+    required super.createdAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? 'Unknown',
-      accountType: json['accountType']?.toString() ?? 'B2C',
-      email: json['email']?.toString() ?? '',
-      registeredAt: DateTime.tryParse(json['registeredAt'] ?? '') ?? DateTime.now(),
-      bookingsCount: json['bookingsCount'] is int ? json['bookingsCount'] : 0,
-      status: json['status']?.toString() ?? 'active',
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      role: json['role'] ?? '',
+      status: json['status'] ?? '',
+      createdAt: json['createdAt'] != null 
+          ? DateTime.parse(json['createdAt']) 
+          : DateTime.now(),
+    );
+  }
+}
+
+class PaginationModel extends PaginationEntity {
+  const PaginationModel({
+    required super.page,
+    required super.limit,
+    required super.total,
+    required super.totalPages,
+  });
+
+  factory PaginationModel.fromJson(Map<String, dynamic> json) {
+    return PaginationModel(
+      page: json['page'] ?? 1,
+      limit: json['limit'] ?? 10,
+      total: json['total'] ?? 0,
+      totalPages: json['totalPages'] ?? 1,
     );
   }
 }

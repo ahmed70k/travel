@@ -9,4 +9,6 @@ abstract class AdminFlightsRepository {
     String? tripType,
     String? category,
   });
+
+  Future<Either<Failure, FlightBookingEntity>> createFlight(FlightBookingEntity booking);
 }

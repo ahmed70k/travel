@@ -51,7 +51,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       return AuthModel.fromJson(response.data);
     } catch (e) {
-      throw Exception("Failed to refresh token: \${ErrorHandler.handle(e)}");
+      throw Exception("فشل تجديد الجلسة: \${ErrorHandler.handle(e)}");
     }
   }
 

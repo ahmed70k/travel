@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../widgets/sidebar/premium_sidebar.dart';
-import '../state/admin_providers.dart';
-import '../../../dashboard/presentation/pages/admin_dashboard_overview.dart';
+import '../state/sidebar_state.dart';
+import '../../../main_dashboard/presentation/pages/admin_dashboard_page.dart';
 import '../../../flights/presentation/pages/admin_flights_page.dart';
 import '../../../hotels/presentation/pages/admin_hotels_page.dart';
 import '../../../cars/presentation/pages/admin_cars_page.dart';
-import '../../../cars/presentation/pages/admin_cars_page.dart';
 import '../../../users/presentation/pages/admin_users_page.dart';
+import '../../../b2b_dashboard/presentation/pages/admin_b2b_dashboard_page.dart';
+import '../../../b2c_dashboard/presentation/pages/admin_b2c_dashboard_page.dart';
+import '../../../profile/presentation/pages/admin_profile_page.dart';
+
 
 class DashboardLayout extends ConsumerWidget {
   const DashboardLayout({super.key});
@@ -20,7 +23,7 @@ class DashboardLayout extends ConsumerWidget {
     Widget activeContent;
     switch (activeTab) {
       case 'لوحة التحكم':
-        activeContent = const AdminDashboardOverview();
+        activeContent = const AdminDashboardPage();
         break;
       case 'حجوزات الطيران':
         activeContent = const AdminFlightsPage();
@@ -35,60 +38,67 @@ class DashboardLayout extends ConsumerWidget {
         activeContent = const AdminUsersPage();
         break;
       case 'الوكلاء B2B':
-        activeContent = const AdminUsersPage(initialAccountType: 'B2B');
+        activeContent = const AdminB2BDashboardPage();
         break;
       case 'العملاء B2C':
-        activeContent = const AdminUsersPage(initialAccountType: 'B2C');
+        activeContent = const AdminB2CDashboardPage();
         break;
+      case 'الملف الشخصي':
+        activeContent = const AdminProfilePage();
+        break;
+
       default:
-        activeContent = const AdminDashboardOverview();
+        activeContent = const AdminDashboardPage();
     }
 
     final isDesktop = MediaQuery.of(context).size.width > 800;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: isDesktop
-          ? null
-          : AppBar(
-              backgroundColor: AppColors.backgroundStart,
-              elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: isDesktop
+            ? null
+            : AppBar(
+                backgroundColor: AppColors.backgroundStart,
+                elevation: 0,
+                iconTheme: const IconThemeData(color: Colors.white),
+              ),
+        drawer: isDesktop ? null : const PremiumSidebar(),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment(-0.6, -0.4),
+              radius: 1.5,
+              colors: [
+                AppColors.backgroundStart,
+                AppColors.backgroundMiddle,
+                AppColors.backgroundEnd,
+              ],
+              stops: [0.0, 0.5, 1.0],
             ),
-      drawer: isDesktop ? null : const PremiumSidebar(),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment(-0.6, -0.4),
-            radius: 1.5,
-            colors: [
-              AppColors.backgroundStart,
-              AppColors.backgroundMiddle,
-              AppColors.backgroundEnd,
-            ],
-            stops: [0.0, 0.5, 1.0],
           ),
-        ),
-        child: isDesktop
-            ? Row(
-                children: [
-                  const PremiumSidebar(),
-                  Expanded(
-                    child: ClipRRect(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: activeContent,
+          child: isDesktop
+              ? Row(
+                  children: [
+                    const PremiumSidebar(),
+                    Expanded(
+                      child: ClipRRect(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          child: activeContent,
+                        ),
                       ),
                     ),
+                  ],
+                )
+              : ClipRRect(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: activeContent,
                   ),
-                ],
-              )
-            : ClipRRect(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: activeContent,
                 ),
-              ),
+        ),
       ),
     );
   }

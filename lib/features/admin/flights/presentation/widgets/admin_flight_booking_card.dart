@@ -56,16 +56,16 @@ class AdminFlightBookingCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildInfoColumn('Customer', booking.customer, Icons.person_outline),
+              _buildInfoColumn('العميل', booking.customer, Icons.person_outline),
               _buildInfoColumn(
-                'Departure',
+                'المغادرة',
                 booking.departureTime != null 
                     ? DateFormat('MMM dd, HH:mm').format(booking.departureTime!) 
                     : '--:--',
                 Icons.access_time,
               ),
               _buildInfoColumn(
-                'Price',
+                'السعر',
                 '\$${booking.price.toStringAsFixed(0)}',
                 Icons.attach_money,
                 isPrice: true,
@@ -84,15 +84,15 @@ class AdminFlightBookingCard extends StatelessWidget {
     switch (status.toLowerCase()) {
       case 'confirmed':
         color = AppColors.success;
-        label = 'Confirmed';
+        label = 'مؤكد';
         break;
       case 'pending':
         color = AppColors.warning;
-        label = 'Pending';
+        label = 'قيد الانتظار';
         break;
       case 'cancelled':
         color = Colors.redAccent;
-        label = 'Cancelled';
+        label = 'ملغي';
         break;
       default:
         color = AppColors.textMuted;

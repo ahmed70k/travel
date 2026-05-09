@@ -62,7 +62,7 @@ class _AdminB2BDashboardView extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () => context.read<AdminB2BCubit>().fetchDashboard(),
                       style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                      child: const Text('Retry'),
+                      child: const Text('إعادة المحاولة'),
                     ),
                   ],
                 ),
@@ -87,24 +87,51 @@ class _AdminB2BDashboardView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header & Date Filter
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'B2B Analytics',
-                            style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                                  color: AppColors.textMain,
-                                  fontWeight: FontWeight.bold,
+                      LayoutBuilder(
+                        builder: (context, headerConstraints) {
+                          final isSmallHeader = headerConstraints.maxWidth < 500;
+                          if (isSmallHeader) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'تحليلات B2B',
+                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                        color: AppColors.textMain,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                 ),
-                          ),
-                          AdminB2BDateFilter(
-                            initialFrom: data.dateRange.from,
-                            initialTo: data.dateRange.to,
-                            onApply: (from, to) {
-                              context.read<AdminB2BCubit>().fetchDashboard(from: from, to: to);
-                            },
-                          ),
-                        ],
+                                const SizedBox(height: 16),
+                                AdminB2BDateFilter(
+                                  initialFrom: data.dateRange.from,
+                                  initialTo: data.dateRange.to,
+                                  onApply: (from, to) {
+                                    context.read<AdminB2BCubit>().fetchDashboard(from: from, to: to);
+                                  },
+                                ),
+                              ],
+                            );
+                          }
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'تحليلات B2B',
+                                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                                      color: AppColors.textMain,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                              AdminB2BDateFilter(
+                                initialFrom: data.dateRange.from,
+                                initialTo: data.dateRange.to,
+                                onApply: (from, to) {
+                                  context.read<AdminB2BCubit>().fetchDashboard(from: from, to: to);
+                                },
+                              ),
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(height: 32),
 
@@ -127,24 +154,24 @@ class _AdminB2BDashboardView extends StatelessWidget {
                             childAspectRatio: 2,
                             children: [
                               AdminB2BKPICard(
-                                title: 'Total Agencies',
+                                title: 'إجمالي الوكالات',
                                 value: kpis.totalAgencies,
                                 icon: Icons.business,
                               ),
                               AdminB2BKPICard(
-                                title: 'Total Revenue',
+                                title: 'إجمالي الإيرادات',
                                 value: kpis.totalRevenue,
                                 icon: Icons.attach_money,
                                 isCurrency: true,
                               ),
                               AdminB2BKPICard(
-                                title: 'Total Commission',
+                                title: 'إجمالي العمولات',
                                 value: kpis.totalCommission,
                                 icon: Icons.money_off,
                                 isCurrency: true,
                               ),
                               AdminB2BKPICard(
-                                title: 'Avg Commission Rate',
+                                title: 'متوسط نسبة العمولة',
                                 value: kpis.avgCommissionRate,
                                 icon: Icons.percent,
                                 isPercentage: true,

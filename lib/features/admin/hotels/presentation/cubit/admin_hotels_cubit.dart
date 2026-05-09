@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/usecases/get_admin_hotels_usecase.dart';
+import '../../../../../core/error/failures.dart';
 import 'admin_hotels_state.dart';
 
 class AdminHotelsCubit extends Cubit<AdminHotelsState> {
@@ -34,7 +35,7 @@ class AdminHotelsCubit extends Cubit<AdminHotelsState> {
     );
 
     result.fold(
-      (failure) => emit(AdminHotelsError(failure.message)),
+      (Failure failure) => emit(AdminHotelsError(failure.message)),
       (data) => emit(AdminHotelsLoaded(data)),
     );
   }

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_text.dart';
 import '../../../../core/widgets/glass_container.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
 
 class ClientProfilePage extends StatelessWidget {
   const ClientProfilePage({super.key});
@@ -78,84 +81,100 @@ class ClientProfilePage extends StatelessWidget {
   }
 
   Widget _buildProfileHeaderCard(bool isMobile) {
-    return GlassContainer(
-      padding: const EdgeInsets.all(24),
-      child: Row(
-        children: [
-          Stack(
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, state) {
+        String name = 'جاري التحميل...';
+        String email = '...';
+
+        if (state is Authenticated) {
+          name = state.user.name;
+          email = state.user.email;
+        }
+
+        return GlassContainer(
+          padding: const EdgeInsets.all(24),
+          child: Row(
             children: [
-              CircleAvatar(
-                radius: isMobile ? 40 : 50,
-                backgroundColor: Colors.blueAccent.withOpacity(0.1),
-                child: const Icon(
-                  Icons.person,
-                  color: Colors.blueAccent,
-                  size: 40,
-                ),
+              Stack(
+                children: [
+                  CircleAvatar(
+                    radius: isMobile ? 40 : 50,
+                    backgroundColor: Colors.blueAccent.withOpacity(0.1),
+                    child: const Icon(
+                      Icons.person,
+                      color: Colors.blueAccent,
+                      size: 40,
+                    ),
+                  ),
+                  Position8(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.pinkAccent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              Position8(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.pinkAccent,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 24),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'محمد علي',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Text(
-                  'moh.ali@example.com',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 13),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+              const SizedBox(width: 24),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildBadge('عميل متميز (Gold)', Colors.amber),
-                    _buildBadge('عضو منذ 2023', Colors.blueAccent),
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      email,
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildBadge('عميل متميز (Gold)', Colors.amber),
+                        _buildBadge('عضو منذ 2023', Colors.blueAccent),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          if (!isMobile)
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.05),
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: AppColors.glassBorder),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
               ),
-              child: const Text('تعديل الملف'),
-            ),
-        ],
-      ),
+              if (!isMobile)
+                ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.05),
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: AppColors.glassBorder),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                  ),
+                  child: const Text('تعديل الملف'),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -179,45 +198,54 @@ class ClientProfilePage extends StatelessWidget {
   }
 
   Widget _buildPersonalInfo() {
-    return GlassContainer(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'المعلومات الشخصية',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildTextField('الاسم الكامل', 'محمد علي'),
-          const SizedBox(height: 16),
-          _buildTextField('رقم الهاتف', '+966 50 123 4567'),
-          const SizedBox(height: 16),
-          _buildTextField('تاريخ الميلاد', '15 / 05 / 1992'),
-          const SizedBox(height: 16),
-          _buildTextField('العنوان', 'الرياض، المملكة العربية السعودية'),
-          const SizedBox(height: 32),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.all(16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, state) {
+        String name = 'محمد علي';
+        if (state is Authenticated) {
+          name = state.user.name;
+        }
+
+        return GlassContainer(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'المعلومات الشخصية',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              child: const Text('حفظ التغييرات'),
-            ),
+              const SizedBox(height: 24),
+              _buildTextField('الاسم الكامل', name),
+              const SizedBox(height: 16),
+              _buildTextField('رقم الهاتف', '+966 50 123 4567'),
+              const SizedBox(height: 16),
+              _buildTextField('تاريخ الميلاد', '15 / 05 / 1992'),
+              const SizedBox(height: 16),
+              _buildTextField('العنوان', 'الرياض، المملكة العربية السعودية'),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.all(16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('حفظ التغييرات'),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
